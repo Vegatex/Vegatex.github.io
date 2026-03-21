@@ -30,7 +30,15 @@
     <div class="row">
         <div class="col-md-4">
             <div class="weather-box" id="current-conditions">
+                <div class="col-md-4">
+            <div class="weather-box" id="current-conditions">
                 <h3>Current Conditions</h3>
+                <h1 id="current-temp" class="display-4 text-primary">--°F</h1>
+                <p class="mb-1"><strong>Wind:</strong> <span id="current-wind">--</span> mph</p>
+                <p class="mb-1"><strong>Humidity:</strong> <span id="current-humidity">--</span>%</p>
+                <p class="text-muted mt-3" style="font-size: 0.8em;">Observation Station: KCLL (Easterwood Field)</p>
+            </div>
+        </div>
                 <p>Temperature, Wind, and Humidity will go here.</p>
             </div>
         </div>
@@ -57,6 +65,41 @@
         </div>
     </div>
 </div>
+<script>
+    // Function to fetch and display current conditions from NWS API
+    async function getCurrentWeather() {
+        try {
+            // 1. Ask the NWS API for the latest observation at Easterwood Field (KCLL)
+            const response = await fetch('https://api.weather.gov/stations/KCLL/observations/latest');
+            const data = await response.json();
+            
+            // 2. Extract the properties from the JSON data
+            const props = data.properties;
+            
+            // 3. Extract temperature (comes in Celsius, convert to Fahrenheit)
+            const tempC = props.temperature.value;
+            const tempF = (tempC * 9/5) + 32;
+            
+            // 4. Extract wind speed (comes in km/h, convert to mph)
+            const windKmh = props.windSpeed.value;
+            const windMph = windKmh * 0.621371;
+            
+            // 5. Extract humidity
+            const humidity = props.relativeHumidity.value;
+            
+            // 6. Push the formatted numbers into our HTML elements
+            document.getElementById('current-temp').innerText = `${Math.round(tempF)}°F`;
+            document.getElementById('current-wind').innerText = Math.round(windMph);
+            document.getElementById('current-humidity').innerText = Math.round(humidity);
+            
+        } catch (error) {
+            console.error("Error fetching weather data:", error);
+            document.getElementById('current-temp').innerText = "Data Error";
+        }
+    }
 
+    // Run the function immediately when the page loads
+    getCurrentWeather();
+</script>
 </body>
 </html>
