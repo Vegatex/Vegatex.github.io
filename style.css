@@ -1,0 +1,20 @@
+/*
+This is a comment in css
+*/
+
+/*
+use a period for class names and # for id names
+*/
+.sample{
+    color: green;
+    text-align: center;
+}
+.title{
+    color: red;
+}
+p{
+    color: blue;
+}
+#secondparagraph{
+    color: gray;
+}
