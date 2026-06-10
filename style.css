@@ -17,10 +17,15 @@ body {
     background-color: #1e3a8a; /* A deep, professional meteorological blue */
     color: white;
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     align-items: center;
     padding: 2.5rem 1rem;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Adds a subtle shadow under the header */
+    position: relative;
+}
+
+.header-titles {
+    text-align: center;
 }
 
 .header p {
@@ -30,6 +35,8 @@ body {
 }
 
 .consulting-box {
+    position: absolute;
+    right: 1rem;
     text-align: right;
     background-color: #f0f4f8; /* Light blue-gray background */
     padding: 10px 15px;
