@@ -61,3 +61,37 @@ a {
 a:hover {
     text-decoration: underline;
 }
+
+/* 8. Weather Consulting Section */
+.weather-consulting {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background-color: #1e3a8a;
+    color: white;
+    padding: 1rem 1.5rem;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+    z-index: 100;
+}
+
+.weather-consulting h3 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1rem;
+    border: none;
+    color: white;
+}
+
+.weather-consulting p {
+    margin: 0;
+    font-size: 0.9rem;
+}
+
+.weather-consulting a {
+    color: #ffffff;
+    text-decoration: none;
+}
+
+.weather-consulting a:hover {
+    text-decoration: underline;
+}
