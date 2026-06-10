@@ -16,7 +16,9 @@ body {
 .header {
     background-color: #1e3a8a; /* A deep, professional meteorological blue */
     color: white;
-    text-align: center;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     padding: 2.5rem 1rem;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Adds a subtle shadow under the header */
 }
@@ -25,6 +27,24 @@ body {
     margin-top: 0.5rem;
     font-weight: 300;
     opacity: 0.9;
+}
+
+.consulting-box {
+    text-align: right;
+    background-color: #f0f4f8; /* Light blue-gray background */
+    padding: 10px 15px;
+    border-radius: 8px;
+    border: 1px solid #cce0ff;
+}
+
+.consulting-box h2 {
+    margin: 0 0 5px 0;
+    font-size: 1.2rem;
+    color: #1e3a8a;
+}
+
+.consulting-box p {
+    margin: 0;
 }
 
 /* 4. Main Layout Container */
