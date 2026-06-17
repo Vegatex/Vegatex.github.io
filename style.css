@@ -88,3 +88,21 @@ a {
 a:hover {
     text-decoration: underline;
 }
+/* Container for side-by-side widgets */
+.top-row-container {
+    display: flex;
+    gap: 20px; 
+    width: 100%;
+}
+
+/* Ensure both widgets take up equal width */
+.top-row-container .widget {
+    flex: 1; 
+}
+
+/* Responsive fix: Stack them on top of each other on mobile screens */
+@media (max-width: 800px) {
+    .top-row-container {
+        flex-direction: column;
+    }
+}
