@@ -3,445 +3,483 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VegaTexWeather | Operational Meteorological Dashboard & Radar</title>
+    <title>VegaTex.Weather | High-Performance Civic Meteorological Dashboard</title>
+    
+    <!-- Civic & Monospace Typography: Overpass, Overpass Mono, Barlow Condensed -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800;900&family=Overpass+Mono:wght@400;600;700;800&family=Overpass:wght@400;600;700;800;900&display=swap" rel="stylesheet">
     
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
-    <!-- Leaflet CSS for Radar Map -->
+    <!-- Leaflet CSS for Doppler Radar -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     
-    <!-- Custom Modern Dark Theme -->
-    <link rel="stylesheet" href="css/style.css?v=4.0">
+    <!-- Custom Civic Meteorological Design System -->
+    <link rel="stylesheet" href="css/style.css?v=5.0">
 </head>
 <body>
 
-    <!-- Sticky Navigation Bar -->
-    <nav class="navbar navbar-expand-lg navbar-dark navbar-glass py-3">
-        <div class="container-fluid px-lg-5">
-            <a class="brand-logo" href="#">
-                <span class="brand-icon">
-                    <i class="bi bi-cloud-sun-fill"></i>
-                </span>
-                <span>VegaTex<span class="text-info">Weather</span></span>
+    <!-- Civic Highway Sign Header (weather.city style) -->
+    <div class="fchwrap">
+        <header class="wrap fch">
+            <a class="fcbrand" href="#" title="VegaTex.Weather Dashboard">
+                <span class="w1">VEGATEX</span><span class="w2">.WEATHER</span>
+                <span class="wbadge">METEOROLOGY</span>
             </a>
 
-            <!-- Search and Controls -->
-            <div class="d-flex align-items-center gap-2 ms-auto flex-wrap justify-content-end">
-                <div class="search-wrapper">
-                    <i class="bi bi-search search-icon-left"></i>
-                    <input type="text" id="city-input" class="form-control search-input" 
-                           placeholder="Search US city or ZIP (e.g. Bryan, TX or 77801)">
-                    <button class="locate-btn" id="locate-btn" title="Use current GPS location">
-                        <i class="bi bi-crosshair"></i>
-                    </button>
-                </div>
-                
-                <button class="btn btn-primary rounded-pill px-3 d-none d-sm-inline-flex align-items-center gap-1" id="search-btn">
-                    <span>Search</span>
+            <!-- Search Ramp & Geolocation -->
+            <div class="fcfind">
+                <form class="ramp" id="ramp" role="search">
+                    <input type="text" id="q" placeholder="Enter US city or ZIP (e.g. Bryan, TX or 77801)" autocomplete="off" spellcheck="false">
+                    <button type="submit" id="btn-search">FIND</button>
+                </form>
+                <button class="geobtn" id="geoloc" type="button" title="Detect location via GPS">
+                    <i class="bi bi-crosshair"></i> GPS
                 </button>
+            </div>
 
-                <!-- Unit Switcher (°F / °C) -->
-                <button class="btn-unit-toggle" id="unit-toggle-btn" title="Switch temperature unit">
-                    °F
-                </button>
-
-                <!-- Consulting Contact Link -->
-                <a href="mailto:oscarvegamail1@gmail.com" class="btn btn-outline-info rounded-pill px-3 py-1 d-none d-md-inline-flex align-items-center gap-1" style="font-size: 0.85rem;">
-                    <i class="bi bi-envelope-fill"></i> Consulting
+            <!-- Header Controls & Consulting -->
+            <div class="d-flex align-items-center gap-2">
+                <button class="btn-unit-toggle" id="unit-toggle-btn" title="Toggle °F / °C">°F</button>
+                <a href="mailto:oscarvegamail1@gmail.com" class="consulting-pill" title="Inquire for Meteorological Consulting & Data Solutions">
+                    <i class="bi bi-envelope-fill text-warning"></i> Consulting
                 </a>
             </div>
-        </div>
-    </nav>
+        </header>
+    </div>
+    <!-- Highway Yellow Accent Strip -->
+    <div class="fcyellow"></div>
 
-    <!-- Main Content Container -->
-    <main class="container-fluid px-lg-5 mt-3">
-        
-        <!-- Quick Select City Chips -->
-        <div class="d-flex align-items-center gap-2 overflow-auto pb-2 mb-3" id="quick-chips-container">
-            <!-- Populated dynamically by app.js -->
+    <!-- Breadcrumb & Quick Jump Strip -->
+    <div class="crumbbar">
+        <div class="wrap d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div id="crumb-text" class="mono">VEGATEX.WEATHER › LOCAL FORECAST · BRYAN, TX</div>
+            <div class="quick-chips-strip" id="quick-chips-container">
+                <!-- Dynamically populated by app.js -->
+            </div>
         </div>
+    </div>
 
-        <!-- Severe Weather Alerts Banner (Conditional) -->
+    <!-- Sticky Section Navigation (weather.city .secnav) -->
+    <div class="secnav-wrapper">
+        <div class="wrap">
+            <nav class="secnav">
+                <a href="#current">CURRENT</a>
+                <a href="#radar">LIVE RADAR</a>
+                <a href="#meteogram">48-HR METEOGRAM</a>
+                <a href="#precip">PRECIP OUTLOOK</a>
+                <a href="#forecast7">7-DAY FORECAST</a>
+                <a href="#discussion">NWS DISCUSSION</a>
+                <a href="#models">NWP MODELS & ENSO</a>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Main Civic Weather Dashboard Content -->
+    <main class="wrap mt-4">
+
+        <!-- Active Severe Weather Alerts Banner (Conditional) -->
         <div id="alerts-container">
-            <!-- Populated dynamically when active NWS alerts exist -->
+            <!-- Dynamically populated by app.js when active NWS alerts exist -->
         </div>
 
-        <!-- Dashboard Layout -->
-        <div class="row g-4">
-            
-            <!-- LEFT COLUMN: Weather Conditions & Forecasts -->
-            <div class="col-lg-7">
-                
-                <!-- Hero: Current Conditions Card -->
-                <div class="glass-card p-4 mb-4">
-                    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
+        <!-- SECTION: CURRENT CONDITIONS -->
+        <section id="current">
+            <div class="card">
+                <!-- Highway Sign Cap -->
+                <div class="chead">
+                    <div class="loc">
+                        <span id="city-title-main">BRYAN · TEXAS</span>
+                        <small id="city-county-station">BRAZOS COUNTY · KCLL (EASTERWOOD FIELD) · LAT 30.674°N LON 96.370°W</small>
+                    </div>
+                    <div class="src">
+                        <div>NWS OPERATIONAL NDFD FEED</div>
+                        <div id="station-wfo-badge">WFO <b>HGX</b> · GRID 68,92</div>
+                    </div>
+                </div>
+
+                <!-- Current Conditions Primary Grid -->
+                <div class="cc">
+                    <div class="now">
+                        <img id="current-cond-icon" src="https://api.weather.gov/icons/land/day/few?size=medium" alt="Current Weather Condition">
                         <div>
-                            <h1 id="city-title" class="hero-city-title">Bryan, Texas</h1>
-                            <div class="station-badge">
-                                <i class="bi bi-geo-alt-fill text-info"></i>
-                                <span id="current-station-text">KCLL · Easterwood Field</span>
+                            <div class="temp">
+                                <span id="current-temp-val">--</span><span class="u" id="current-temp-unit">°F</span>
                             </div>
+                            <div class="desc" id="current-cond-text">Observing Atmosphere...</div>
+                            <div class="feels" id="current-feels-text">Feels like <b>--°</b></div>
                         </div>
-                        <div class="text-end">
-                            <span class="badge bg-dark bg-opacity-50 text-white-50 border border-white border-opacity-10 py-2 px-3 rounded-pill" style="font-size: 0.8rem;">
-                                <i class="bi bi-broadcast text-success me-1"></i> Live NWS Feed
+                    </div>
+
+                    <!-- Atmospheric 6-Metric Tile Grid -->
+                    <div class="ccgrid">
+                        <div class="ccg">
+                            <div class="k">WIND</div>
+                            <div class="v" id="stat-wind">--</div>
+                        </div>
+                        <div class="ccg">
+                            <div class="k">HUMIDITY</div>
+                            <div class="v" id="stat-humidity">--%</div>
+                        </div>
+                        <div class="ccg">
+                            <div class="k">DEW POINT</div>
+                            <div class="v" id="stat-dewpoint">--°</div>
+                        </div>
+                        <div class="ccg">
+                            <div class="k">PRECIP CHANCE</div>
+                            <div class="v" id="stat-precip">0%</div>
+                        </div>
+                        <div class="ccg">
+                            <div class="k">PRESSURE</div>
+                            <div class="v" id="stat-pressure">29.92 inHg</div>
+                        </div>
+                        <div class="ccg">
+                            <div class="k">VISIBILITY</div>
+                            <div class="v" id="stat-visibility">10.0 mi</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION: LIVE DOPPLER RADAR -->
+        <section id="radar">
+            <div class="rule">
+                <h2><i class="bi bi-radar text-info"></i> Live WSR-88D Doppler Radar & Dual-Pol Suite</h2>
+                <span class="ln"></span>
+                <span class="sub">REAL-TIME BASE REFLECTIVITY & VELOCITY TILE FEEDS</span>
+            </div>
+
+            <div class="card" id="radar-card">
+                <!-- Radar Control Bar Header -->
+                <div class="p-3 border-bottom border-white border-opacity-10 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge bg-dark border border-secondary text-white-50 mono" style="font-size: 11px;">
+                            <i class="bi bi-broadcast text-success me-1"></i> HIGH-RES NO-LIMIT TILE ENGINE
+                        </span>
+                        <button class="btn btn-sm btn-outline-light rounded-pill px-2 py-0" id="btn-radar-fullscreen" onclick="toggleRadarFullscreen()" title="Toggle Full-Screen Doppler Radar View (Esc to Exit)">
+                            <i class="bi bi-arrows-fullscreen me-1" id="fullscreen-icon"></i><span id="fullscreen-text">Full Screen</span>
+                        </button>
+                    </div>
+
+                    <!-- Mode Switcher: NEXRAD / Loop / Windy -->
+                    <div class="btn-group btn-group-sm" role="group" id="radar-mode-group">
+                        <button type="button" class="btn btn-outline-info active" id="btn-mode-nexrad" onclick="setRadarMode('nexrad')">
+                            <i class="bi bi-broadcast me-1"></i>NEXRAD
+                        </button>
+                        <button type="button" class="btn btn-outline-info" id="btn-mode-loop" onclick="setRadarMode('loop')">
+                            <i class="bi bi-play-circle me-1"></i>Loop
+                        </button>
+                        <button type="button" class="btn btn-outline-info" id="btn-mode-windy" onclick="setRadarMode('windy')">
+                            <i class="bi bi-lightning-charge me-1"></i>Windy
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Radar Product Selector & Dual-Pol Bar -->
+                <div class="px-3 py-2 border-bottom border-white border-opacity-10 d-flex justify-content-between align-items-center flex-wrap gap-2" id="radar-product-bar" style="background: rgba(15, 23, 42, 0.5);">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="mono text-muted" style="font-size: 11px;"><i class="bi bi-layers-fill text-info me-1"></i>PRODUCT:</span>
+                        <select id="radar-product-select" class="form-select form-select-sm bg-dark text-white border-secondary mono" style="width: auto; font-size: 0.8rem;" onchange="setRadarProduct(this.value)">
+                            <option value="N0Q" selected>Base Reflectivity (Composite)</option>
+                            <option value="N0U">Doppler Velocity (Radial Wind)</option>
+                            <option value="N0S">Storm-Relative Motion (Rotation / SRV)</option>
+                            <option value="N0Z">Long-Range Reflectivity (248nm)</option>
+                            <option value="NET">Echo Tops (Cloud Height)</option>
+                        </select>
+                    </div>
+
+                    <!-- Direct Dual-Pol Level-II Launcher -->
+                    <a id="btn-dual-pol" href="https://radar.weather.gov/station/KGRK/standard" target="_blank" 
+                       class="btn btn-sm btn-outline-warning rounded-pill px-2 py-0 d-inline-flex align-items-center gap-1 mono" 
+                       style="font-size: 0.78rem;" 
+                       title="Open official NWS Level II Dual-Pol viewer for Correlation Coefficient (CC), Differential Reflectivity (ZDR), & Tornado Debris Signatures">
+                        <i class="bi bi-lightning-charge"></i> Dual-Pol (CC / ZDR / TDS) <i class="bi bi-box-arrow-up-right" style="font-size: 0.68rem;"></i>
+                    </a>
+                </div>
+
+                <!-- Map & Windy Viewers -->
+                <div id="radar-map-wrapper" style="position: relative;">
+                    <!-- Leaflet Radar Canvas -->
+                    <div id="radar-map"></div>
+                    <!-- Windy Iframe Embed (Mode 'windy') -->
+                    <iframe id="windy-frame" 
+                            width="100%" 
+                            height="520" 
+                            style="display: none; border: none;"
+                            frameborder="0">
+                    </iframe>
+                </div>
+
+                <!-- Integrated Radar Control Bar -->
+                <div class="radar-controls-panel" id="radar-controls-panel">
+                    <div class="d-flex align-items-center gap-3" id="radar-playback-row" style="display: none;">
+                        <button class="radar-play-btn" id="radar-play-btn" title="Play / Pause Radar Loop">
+                            <i class="bi bi-play-fill"></i>
+                        </button>
+                        
+                        <div class="flex-grow-1">
+                            <input type="range" class="radar-slider" id="radar-slider" min="0" max="12" step="1" value="12">
+                        </div>
+
+                        <div id="radar-timestamp" class="text-end" style="min-width: 120px; font-size: 0.8rem;">
+                            <span class="badge bg-success">LIVE COMPOSITE</span>
+                        </div>
+                    </div>
+
+                    <!-- Secondary Settings & Legend -->
+                    <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top border-white border-opacity-10 flex-wrap gap-2">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="mono text-muted" style="font-size: 11px;">FEED:</span>
+                            <span class="badge bg-dark bg-opacity-75 text-info border border-info border-opacity-25 mono" id="radar-source-badge" style="font-size: 11px;">
+                                NWS / NOAA NEXRAD Base Reflectivity (Composite)
                             </span>
                         </div>
-                    </div>
 
-                    <div class="row align-items-center g-3 my-2">
-                        <div class="col-md-5 d-flex align-items-center gap-3">
-                            <img id="current-icon" src="https://api.weather.gov/icons/land/day/few?size=medium" 
-                                 alt="Current Weather" class="hero-icon">
-                            <div>
-                                <div class="d-flex align-items-baseline">
-                                    <span id="current-temp" class="hero-temp">--</span>
-                                    <span id="current-temp-unit" class="hero-temp-unit">°F</span>
-                                </div>
-                                <div id="current-condition" class="condition-badge">Loading...</div>
-                                <div id="current-high-low" class="high-low-badge">H: -- · L: --</div>
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="radar-legend d-none d-sm-flex">
+                                <span>Rain</span>
+                                <span class="legend-bar"></span>
+                                <span>Severe</span>
                             </div>
-                        </div>
-
-                        <!-- Atmospheric Metrics Grid -->
-                        <div class="col-md-7">
-                            <div class="row g-2">
-                                <div class="col-6 col-sm-4">
-                                    <div class="metric-box">
-                                        <div class="metric-icon-wrap">
-                                            <i class="bi bi-thermometer-half"></i>
-                                        </div>
-                                        <div>
-                                            <div class="metric-label">Feels Like</div>
-                                            <div class="metric-value" id="metric-feels-like">--°</div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-6 col-sm-4">
-                                    <div class="metric-box">
-                                        <div class="metric-icon-wrap">
-                                            <i class="bi bi-wind"></i>
-                                        </div>
-                                        <div>
-                                            <div class="metric-label">Wind</div>
-                                            <div class="metric-value" id="metric-wind">--</div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-6 col-sm-4">
-                                    <div class="metric-box">
-                                        <div class="metric-icon-wrap">
-                                            <i class="bi bi-moisture"></i>
-                                        </div>
-                                        <div>
-                                            <div class="metric-label">Humidity</div>
-                                            <div class="metric-value" id="metric-humidity">--%</div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-6 col-sm-4">
-                                    <div class="metric-box">
-                                        <div class="metric-icon-wrap">
-                                            <i class="bi bi-droplet-half"></i>
-                                        </div>
-                                        <div>
-                                            <div class="metric-label">Dew Point</div>
-                                            <div class="metric-value" id="metric-dewpoint">--°</div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-6 col-sm-4">
-                                    <div class="metric-box">
-                                        <div class="metric-icon-wrap">
-                                            <i class="bi bi-cloud-rain"></i>
-                                        </div>
-                                        <div>
-                                            <div class="metric-label">Precip %</div>
-                                            <div class="metric-value" id="metric-precip">0%</div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-6 col-sm-4">
-                                    <div class="metric-box">
-                                        <div class="metric-icon-wrap">
-                                            <i class="bi bi-compass"></i>
-                                        </div>
-                                        <div>
-                                            <div class="metric-label">Direction</div>
-                                            <div class="metric-value" id="metric-wind-dir">--</div>
-                                        </div>
-                                    </div>
-                                </div>
+                            <div class="d-flex align-items-center gap-2 mono" style="font-size: 11px;">
+                                <span class="text-muted">OPACITY:</span>
+                                <input type="range" id="radar-opacity-slider" min="0.2" max="1.0" step="0.05" value="0.8" style="width: 75px;">
                             </div>
                         </div>
                     </div>
-                </div>
-
-                <!-- 24-Hour Hourly Forecast Carousel -->
-                <div class="glass-card p-4 mb-4">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <div class="section-title mb-0">
-                            <i class="bi bi-clock-history text-info"></i>
-                            <span>24-Hour Hourly Forecast</span>
-                        </div>
-                        <div class="d-flex gap-1">
-                            <button class="scroll-btn" id="scroll-left-btn" title="Scroll left">
-                                <i class="bi bi-chevron-left"></i>
-                            </button>
-                            <button class="scroll-btn" id="scroll-right-btn" title="Scroll right">
-                                <i class="bi bi-chevron-right"></i>
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="hourly-scroll-container" id="hourly-scroll-container">
-                        <!-- Populated dynamically with hourly cards -->
-                        <div class="text-muted p-3">Loading hourly forecast...</div>
-                    </div>
-                </div>
-
-                <!-- 7-Day Forecast Outlook -->
-                <div class="glass-card p-4 mb-4">
-                    <div class="section-title">
-                        <i class="bi bi-calendar3 text-info"></i>
-                        <span>7-Day Weather Outlook</span>
-                    </div>
-
-                    <div id="daily-forecast-container">
-                        <!-- Populated dynamically with daily forecast rows -->
-                        <div class="text-muted p-3">Loading daily outlook...</div>
-                    </div>
-                </div>
-
-                <!-- Climate & El Niño (ENSO) Conditions -->
-                <div class="glass-card p-4 mb-4">
-                    <div class="section-title">
-                        <i class="bi bi-water text-info"></i>
-                        <span>El Niño / Climate Conditions (ENSO Tracking)</span>
-                    </div>
-                    <p class="text-secondary" style="font-size: 0.92rem; line-height: 1.5;">
-                        <strong>Current Status:</strong> Sea surface temperatures across equatorial Pacific Niño regions are routinely monitored for El Niño / La Niña phases and global atmospheric teleconnections.
-                    </p>
-                    <div class="text-center p-2 rounded bg-dark bg-opacity-40 border border-white border-opacity-10 mt-2">
-                        <img src="https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/enso_update/ssta_c.gif" 
-                             alt="NOAA CPC Niño Region SST Anomalies" 
-                             class="img-fluid rounded" 
-                             style="max-height: 320px;"
-                             onerror="this.parentElement.innerHTML='<span class=\'text-muted\'>NOAA Climate Prediction Center live graphic updating.</span>'">
-                        <div class="text-muted mt-2" style="font-size: 0.75rem;">Source: NOAA Climate Prediction Center (CPC) SST Anomalies</div>
-                    </div>
-                </div>
-
-            </div>
-
-            <!-- RIGHT COLUMN: Live Doppler Radar, Models & Resources -->
-            <div class="col-lg-5">
-                
-                <!-- Live Doppler Radar Card -->
-                <div class="glass-card p-4 mb-4" id="radar-card">
-                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
-                        <div class="d-flex align-items-center gap-2">
-                            <div class="section-title mb-0">
-                                <i class="bi bi-radar text-info"></i>
-                                <span>Live Doppler Radar</span>
-                            </div>
-                            <button class="btn btn-sm btn-outline-light rounded-pill px-2 py-0" id="btn-radar-fullscreen" onclick="toggleRadarFullscreen()" title="Toggle full-screen view" style="font-size: 0.78rem;">
-                                <i class="bi bi-arrows-fullscreen me-1" id="fullscreen-icon"></i><span id="fullscreen-text">Full Screen</span>
-                            </button>
-                        </div>
-                        
-                        <!-- Radar Source Mode Switcher -->
-                        <div class="btn-group btn-group-sm" role="group" id="radar-mode-group">
-                            <button type="button" class="btn btn-outline-info active" id="btn-mode-nexrad" onclick="setRadarMode('nexrad')">
-                                <i class="bi bi-broadcast me-1"></i>NEXRAD
-                            </button>
-                            <button type="button" class="btn btn-outline-info" id="btn-mode-loop" onclick="setRadarMode('loop')">
-                                <i class="bi bi-play-circle me-1"></i>Loop
-                            </button>
-                            <button type="button" class="btn btn-outline-info" id="btn-mode-windy" onclick="setRadarMode('windy')">
-                                <i class="bi bi-lightning-charge me-1"></i>Windy
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Radar Product Selector & Dual-Pol Bar -->
-                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3 pt-1 border-top border-white border-opacity-10" id="radar-product-bar">
-                        <div class="d-flex align-items-center gap-2">
-                            <span class="text-muted" style="font-size: 0.8rem;"><i class="bi bi-layers-fill text-info me-1"></i>Product:</span>
-                            <select id="radar-product-select" class="form-select form-select-sm bg-dark text-white border-secondary" style="width: auto; font-size: 0.8rem;" onchange="setRadarProduct(this.value)">
-                                <option value="N0Q" selected>Base Reflectivity (Composite)</option>
-                                <option value="N0U">Doppler Velocity (Radial Wind)</option>
-                                <option value="N0S">Storm-Relative Motion (Rotation / SRV)</option>
-                                <option value="N0Z">Long-Range Reflectivity (248nm)</option>
-                                <option value="NET">Echo Tops (Cloud Height)</option>
-                            </select>
-                        </div>
-
-                        <!-- Direct Dual-Pol Viewer Launcher (CC, ZDR, TDS) -->
-                        <a id="btn-dual-pol" href="https://radar.weather.gov/station/KGRK/standard" target="_blank" 
-                           class="btn btn-sm btn-outline-warning rounded-pill px-2 py-0 d-inline-flex align-items-center gap-1" 
-                           style="font-size: 0.78rem;" 
-                           title="Open official NWS Level II Dual-Pol viewer for Correlation Coefficient (CC), Differential Reflectivity (ZDR), & Tornado Debris Signatures">
-                            <i class="bi bi-lightning-charge"></i> Dual-Pol (CC/ZDR) <i class="bi bi-box-arrow-up-right" style="font-size: 0.68rem;"></i>
-                        </a>
-                    </div>
-
-                    <!-- Map & Windy Containers -->
-                    <div id="radar-map-wrapper" style="position: relative;">
-                        <!-- Leaflet Map Container -->
-                        <div id="radar-map"></div>
-                        <!-- Windy Iframe Embed -->
-                        <iframe id="windy-frame" 
-                                width="100%" 
-                                height="480" 
-                                style="display: none; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08);"
-                                frameborder="0">
-                        </iframe>
-                    </div>
-
-                    <!-- Integrated Radar Controls -->
-                    <div class="radar-controls-panel" id="radar-controls-panel">
-                        <div class="d-flex align-items-center gap-3" id="radar-playback-row">
-                            <button class="radar-play-btn" id="radar-play-btn" title="Play / Pause Radar Loop">
-                                <i class="bi bi-play-fill"></i>
-                            </button>
-                            
-                            <div class="flex-grow-1">
-                                <input type="range" class="radar-slider" id="radar-slider" min="0" max="12" step="1" value="12">
-                            </div>
-
-                            <div id="radar-timestamp" class="text-end" style="min-width: 120px; font-size: 0.8rem;">
-                                <span class="badge bg-success">LIVE COMPOSITE</span>
-                            </div>
-                        </div>
-
-                        <!-- Secondary Settings & Legend -->
-                        <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top border-white border-opacity-10 flex-wrap gap-2">
-                            <div class="d-flex align-items-center gap-2">
-                                <span class="text-muted" style="font-size: 0.8rem;">Feed:</span>
-                                <span class="badge bg-dark bg-opacity-75 text-info border border-info border-opacity-25" id="radar-source-badge">
-                                    NWS / NOAA NEXRAD (High-Res)
-                                </span>
-                            </div>
-
-                            <div class="d-flex align-items-center gap-3">
-                                <div class="radar-legend d-none d-sm-flex">
-                                    <span>Rain</span>
-                                    <span class="legend-bar"></span>
-                                    <span>Severe</span>
-                                </div>
-                                <div class="d-flex align-items-center gap-2" style="font-size: 0.8rem;">
-                                    <span class="text-muted">Opacity:</span>
-                                    <input type="range" id="radar-opacity-slider" min="0.2" max="1.0" step="0.05" value="0.8" style="width: 75px;">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Meteorological Data & Links Card -->
-                <div class="glass-card p-4 mb-4">
-                    <div class="section-title">
-                        <i class="bi bi-activity text-info"></i>
-                        <span>NWS Station & Technical Info</span>
-                    </div>
-
-                    <div id="nws-tech-info">
-                        <!-- Populated dynamically with station identifiers, CWA, and grid coordinates -->
-                    </div>
-                </div>
-
-                <!-- Operational Weather Models & Tools -->
-                <div class="glass-card p-4 mb-4">
-                    <div class="section-title">
-                        <i class="bi bi-cpu text-info"></i>
-                        <span>Numerical Weather Prediction (NWP)</span>
-                    </div>
-                    <div class="list-group list-group-flush bg-transparent">
-                        <a href="https://www.tropicaltidbits.com/" target="_blank" class="list-group-item list-group-item-action bg-transparent text-white border-secondary d-flex justify-content-between align-items-center px-0 py-2">
-                            <span><i class="bi bi-tropical-storm text-warning me-2"></i>Tropical Tidbits</span>
-                            <i class="bi bi-box-arrow-up-right text-muted" style="font-size: 0.8rem;"></i>
-                        </a>
-                        <a href="https://www.pivotalweather.com/model.php" target="_blank" class="list-group-item list-group-item-action bg-transparent text-white border-secondary d-flex justify-content-between align-items-center px-0 py-2">
-                            <span><i class="bi bi-graph-up text-info me-2"></i>Pivotal Weather Models</span>
-                            <i class="bi bi-box-arrow-up-right text-muted" style="font-size: 0.8rem;"></i>
-                        </a>
-                        <a href="https://hdwx.tamu.edu/product-list/" target="_blank" class="list-group-item list-group-item-action bg-transparent text-white border-secondary d-flex justify-content-between align-items-center px-0 py-2">
-                            <span><i class="bi bi-building text-danger me-2"></i>HDWX Texas A&M University</span>
-                            <i class="bi bi-box-arrow-up-right text-muted" style="font-size: 0.8rem;"></i>
-                        </a>
-                        <a href="https://weather.cod.edu/forecast/" target="_blank" class="list-group-item list-group-item-action bg-transparent text-white border-secondary d-flex justify-content-between align-items-center px-0 py-2">
-                            <span><i class="bi bi-layers text-success me-2"></i>College of DuPage (COD) Analysis</span>
-                            <i class="bi bi-box-arrow-up-right text-muted" style="font-size: 0.8rem;"></i>
-                        </a>
-                        <a href="https://web.weatherwise.app/#map=3.47/36.91/-96.35" target="_blank" class="list-group-item list-group-item-action bg-transparent text-white border-secondary d-flex justify-content-between align-items-center px-0 py-2">
-                            <span><i class="bi bi-map text-primary me-2"></i>WeatherWise Interactive Maps</span>
-                            <i class="bi bi-box-arrow-up-right text-muted" style="font-size: 0.8rem;"></i>
-                        </a>
-                        <a href="https://sites.gsl.noaa.gov/desi/?x4dLocations=%5B%22City%22%2C%22DSS%22%2C%22Station-ASOS%22%2C%22Station-AWOS%22%2C%22Station-RAWS%22%2C%22Station-OTHER%22%5D&chart=x4d&lat=40&lon=-105&theme=dark" target="_blank" class="list-group-item list-group-item-action bg-transparent text-white border-0 d-flex justify-content-between align-items-center px-0 py-2">
-                            <span><i class="bi bi-diagram-3 text-info me-2"></i>NOAA GSL DESI Ensemble Viewer (HREF)</span>
-                            <i class="bi bi-box-arrow-up-right text-muted" style="font-size: 0.8rem;"></i>
-                        </a>
-                    </div>
-                </div>
-
-                <!-- National Weather Service Centers -->
-                <div class="glass-card p-4">
-                    <div class="section-title">
-                        <i class="bi bi-shield-check text-info"></i>
-                        <span>NWS National Centers</span>
-                    </div>
-                    <div class="list-group list-group-flush bg-transparent">
-                        <a href="https://www.spc.noaa.gov/products/outlook/day1otlk.html" target="_blank" class="list-group-item list-group-item-action bg-transparent text-white border-secondary d-flex justify-content-between align-items-center px-0 py-2">
-                            <span><i class="bi bi-lightning-charge-fill text-warning me-2"></i>Storm Prediction Center (SPC) Day 1</span>
-                            <i class="bi bi-box-arrow-up-right text-muted" style="font-size: 0.8rem;"></i>
-                        </a>
-                        <a href="https://www.wpc.ncep.noaa.gov/#page=ovw" target="_blank" class="list-group-item list-group-item-action bg-transparent text-white border-secondary d-flex justify-content-between align-items-center px-0 py-2">
-                            <span><i class="bi bi-clouds-fill text-info me-2"></i>Weather Prediction Center (WPC)</span>
-                            <i class="bi bi-box-arrow-up-right text-muted" style="font-size: 0.8rem;"></i>
-                        </a>
-                        <a href="https://www.cpc.ncep.noaa.gov" target="_blank" class="list-group-item list-group-item-action bg-transparent text-white border-0 d-flex justify-content-between align-items-center px-0 py-2">
-                            <span><i class="bi bi-globe-americas text-success me-2"></i>Climate Prediction Center (CPC)</span>
-                            <i class="bi bi-box-arrow-up-right text-muted" style="font-size: 0.8rem;"></i>
-                        </a>
-                    </div>
-                </div>
-
-            </div>
-
-        </div>
-
-        <!-- Floating Toast Container -->
-        <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 2000">
-            <div id="liveToast" class="toast align-items-center text-white bg-dark border-info shadow-lg" role="alert" aria-live="assertive" aria-atomic="true">
-                <div class="d-flex">
-                    <div class="toast-body" id="toast-message">
-                        Message
-                    </div>
-                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
                 </div>
             </div>
-        </div>
+        </section>
 
-        <!-- Footer -->
-        <footer class="mt-5 text-center text-muted" style="font-size: 0.82rem;">
-            <p class="mb-1">
-                Data provided by the <a href="https://weather.gov" target="_blank" class="text-info text-decoration-none">National Weather Service (NWS)</a>, 
-                <a href="https://open-meteo.com" target="_blank" class="text-info text-decoration-none">Open-Meteo</a>, 
-                and <a href="https://rainviewer.com" target="_blank" class="text-info text-decoration-none">RainViewer</a>.
-            </p>
-            <p class="text-secondary">© VegaTexWeather Dashboard · Weather Consulting: <a href="mailto:oscarvegamail1@gmail.com" class="text-info text-decoration-none">oscarvegamail1@gmail.com</a></p>
-        </footer>
+        <!-- SECTION: 48-HOUR THERMAL METEOGRAM -->
+        <section id="meteogram">
+            <div class="rule">
+                <h2><i class="bi bi-bar-chart-fill text-warning"></i> 48-Hour Thermal Meteogram</h2>
+                <span class="ln"></span>
+                <span class="sub">HOURLY TEMPERATURE & POP DISTRIBUTION</span>
+            </div>
+
+            <div class="card">
+                <div class="barrow">
+                    <div class="brhd">
+                        <div>HOURLY TEMPERATURE PROFILE (COLOR GRADIENT & ESTIMATED RAIN CHANCE)</div>
+                        <div id="meteogram-hilo" class="fchilo">48H HIGH --° · LOW --°</div>
+                    </div>
+                    <div class="hbwrap">
+                        <div class="obars" id="hourly-meteogram-bars">
+                            <!-- Populated dynamically by app.js renderHourlyMeteogram() -->
+                            <div class="text-muted p-4 mono">Loading 48-hour hourly meteorological profile...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION: PRECIPITATION PLANNING TILES & THRESHOLDS -->
+        <section id="precip">
+            <div class="rule">
+                <h2><i class="bi bi-cloud-rain-heavy-fill text-info"></i> Precipitation Outlook & Planning Odds</h2>
+                <span class="ln"></span>
+                <span class="sub">QPF LIQUID ESTIMATES & THRESHOLD PROBABILITIES</span>
+            </div>
+
+            <div class="card">
+                <div class="pxtiles">
+                    <div class="pxtile">
+                        <div class="ptl">NEXT 24 HOURS</div>
+                        <div class="ptv" id="precip-24h-val">0.00<small>"</small></div>
+                        <div class="ptr" id="precip-24h-desc">Dry Conditions</div>
+                    </div>
+                    <div class="pxtile">
+                        <div class="ptl">NEXT 48 HOURS</div>
+                        <div class="ptv" id="precip-48h-val">0.00<small>"</small></div>
+                        <div class="ptr" id="precip-48h-desc">Dry Conditions</div>
+                    </div>
+                    <div class="pxtile">
+                        <div class="ptl">7-DAY TOTAL ACCUMULATION</div>
+                        <div class="ptv" id="precip-7d-val">0.00<small>"</small></div>
+                        <div class="ptr" id="precip-7d-desc">Dry Conditions</div>
+                    </div>
+                </div>
+                <div class="oddsrow">
+                    <span class="olbl">THRESHOLD ODDS:</span>
+                    <div class="oc">Measurable Rain: <b id="odd-rain-chance">--%</b></div>
+                    <div class="oc">≥ 0.10 in: <b id="odd-010">--%</b></div>
+                    <div class="oc">≥ 0.50 in: <b id="odd-050">--%</b></div>
+                    <div class="oc">Thunderstorm Threat: <b id="odd-tstorm">--%</b></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION: 7-DAY EXTENDED FORECAST -->
+        <section id="forecast7">
+            <div class="rule">
+                <h2><i class="bi bi-calendar3 text-success"></i> 7-Day Extended Weather Outlook</h2>
+                <span class="ln"></span>
+                <span class="sub">NWS NATIONAL DIGITAL FORECAST DATABASE</span>
+            </div>
+
+            <div class="card" id="daily-forecast-container">
+                <!-- Populated dynamically by app.js renderDailyForecast() -->
+                <div class="text-muted p-4 mono">Loading 7-day extended outlook...</div>
+            </div>
+        </section>
+
+        <!-- SECTION: LIVE NWS AREA FORECAST DISCUSSION (AFD) -->
+        <section id="discussion">
+            <div class="rule">
+                <h2><i class="bi bi-file-earmark-text-fill text-warning"></i> NWS Area Forecast Discussion (AFD)</h2>
+                <span class="ln"></span>
+                <span class="sub" id="afd-office-name">NWS REGIONAL FORECAST OFFICE SYNOPTIC TEXT</span>
+            </div>
+
+            <div class="card p-3">
+                <div class="d-flex justify-content-between align-items-center mb-2 px-1">
+                    <span class="mono text-muted" style="font-size: 11px;">DIRECT NWS FORECASTER TECHNICAL REASONING & METEOROLOGICAL ANALYSIS</span>
+                    <span class="badge bg-dark border border-secondary text-info mono" style="font-size: 10px;">LIVE NO-CUT TEXT</span>
+                </div>
+                <pre class="afd-box" id="nws-afd-text">Fetching official Area Forecast Discussion (AFD) from National Weather Service...</pre>
+            </div>
+        </section>
+
+        <!-- SECTION: OPERATIONAL NWP MODELS & CLIMATE / ENSO TRACKING -->
+        <section id="models">
+            <div class="rule">
+                <h2><i class="bi bi-cpu-fill text-info"></i> Numerical Weather Prediction (NWP) & ENSO Tracking</h2>
+                <span class="ln"></span>
+                <span class="sub">GLOBAL ENSEMBLES & EQUATORIAL PACIFIC SST MONITORS</span>
+            </div>
+
+            <div class="row g-4">
+                <!-- Left: NWP Model Suite & SPC / WPC Resources -->
+                <div class="col-lg-6">
+                    <div class="card p-3 h-100">
+                        <div class="d-flex align-items-center gap-2 mb-3 pb-2 border-bottom border-white border-opacity-10">
+                            <i class="bi bi-grid-3x3-gap-fill text-info"></i>
+                            <h3 class="h6 mb-0 text-white font-weight-bold">Operational Meteorological Tools & Models</h3>
+                        </div>
+                        <div class="list-group list-group-flush bg-transparent">
+                            <a href="https://www.tropicaltidbits.com/" target="_blank" class="list-group-item list-group-item-action bg-transparent text-white border-secondary d-flex justify-content-between align-items-center px-0 py-2">
+                                <span><i class="bi bi-tropical-storm text-warning me-2"></i>Tropical Tidbits (GFS, ECMWF, HWRF)</span>
+                                <i class="bi bi-box-arrow-up-right text-muted" style="font-size: 0.8rem;"></i>
+                            </a>
+                            <a href="https://www.pivotalweather.com/model.php" target="_blank" class="list-group-item list-group-item-action bg-transparent text-white border-secondary d-flex justify-content-between align-items-center px-0 py-2">
+                                <span><i class="bi bi-graph-up text-info me-2"></i>Pivotal Weather (HRRR, NAM, GEFS)</span>
+                                <i class="bi bi-box-arrow-up-right text-muted" style="font-size: 0.8rem;"></i>
+                            </a>
+                            <a href="https://hdwx.tamu.edu/product-list/" target="_blank" class="list-group-item list-group-item-action bg-transparent text-white border-secondary d-flex justify-content-between align-items-center px-0 py-2">
+                                <span><i class="bi bi-building text-danger me-2"></i>HDWX Texas A&M University Analysis</span>
+                                <i class="bi bi-box-arrow-up-right text-muted" style="font-size: 0.8rem;"></i>
+                            </a>
+                            <a href="https://weather.cod.edu/forecast/" target="_blank" class="list-group-item list-group-item-action bg-transparent text-white border-secondary d-flex justify-content-between align-items-center px-0 py-2">
+                                <span><i class="bi bi-layers text-success me-2"></i>College of DuPage (COD) NEXRAD & Sat</span>
+                                <i class="bi bi-box-arrow-up-right text-muted" style="font-size: 0.8rem;"></i>
+                            </a>
+                            <a href="https://sites.gsl.noaa.gov/desi/?x4dLocations=%5B%22City%22%2C%22DSS%22%2C%22Station-ASOS%22%2C%22Station-AWOS%22%2C%22Station-RAWS%22%2C%22Station-OTHER%22%5D&chart=x4d&lat=40&lon=-105&theme=dark" target="_blank" class="list-group-item list-group-item-action bg-transparent text-white border-secondary d-flex justify-content-between align-items-center px-0 py-2">
+                                <span><i class="bi bi-diagram-3 text-info me-2"></i>NOAA GSL DESI Ensemble Viewer (HREF)</span>
+                                <i class="bi bi-box-arrow-up-right text-muted" style="font-size: 0.8rem;"></i>
+                            </a>
+                            <a href="https://www.spc.noaa.gov/products/outlook/day1otlk.html" target="_blank" class="list-group-item list-group-item-action bg-transparent text-white border-0 d-flex justify-content-between align-items-center px-0 py-2">
+                                <span><i class="bi bi-lightning-charge-fill text-warning me-2"></i>Storm Prediction Center (SPC) Day 1</span>
+                                <i class="bi bi-box-arrow-up-right text-muted" style="font-size: 0.8rem;"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: El Niño / Southern Oscillation (ENSO) Monitoring -->
+                <div class="col-lg-6">
+                    <div class="card p-3 h-100">
+                        <div class="d-flex align-items-center gap-2 mb-2 pb-2 border-bottom border-white border-opacity-10">
+                            <i class="bi bi-water text-primary"></i>
+                            <h3 class="h6 mb-0 text-white font-weight-bold">El Niño / Southern Oscillation (ENSO) Tracking</h3>
+                        </div>
+                        <p class="text-secondary mb-2" style="font-size: 0.88rem; line-height: 1.5;">
+                            Equatorial Pacific Sea Surface Temperature (SST) anomalies driving North American storm tracks, subtropical jet positions, and seasonal teleconnections.
+                        </p>
+                        <div class="text-center p-2 rounded bg-dark bg-opacity-50 border border-white border-opacity-10">
+                            <img src="https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/enso_update/ssta_c.gif" 
+                                 alt="NOAA CPC Niño Region Sea Surface Temperature Anomalies" 
+                                 class="img-fluid rounded" 
+                                 style="max-height: 250px;"
+                                 onerror="this.parentElement.innerHTML='<span class=\'text-muted\'>NOAA Climate Prediction Center live graphic updating.</span>'">
+                            <div class="text-muted mt-2 mono" style="font-size: 0.72rem;">SOURCE: NOAA CLIMATE PREDICTION CENTER (CPC)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
 
     </main>
 
+    <!-- Floating Live Toast Alert Container -->
+    <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 2000">
+        <div id="liveToast" class="toast align-items-center text-white bg-dark border-info shadow-lg" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body" id="toast-message">
+                    Operational Weather Status
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Civic Meteorological Footer (weather.city .wc-foot style) -->
+    <footer class="wc-foot">
+        <div class="wrap">
+            <div class="fbrand">
+                <b>VEGATEX<span>.WEATHER</span></b>
+                <i>HIGH-PERFORMANCE OPERATIONAL METEOROLOGY</i>
+            </div>
+            <div class="fcols">
+                <div class="fcol">
+                    <h4>LOCAL RADAR & NWS</h4>
+                    <a href="#radar">Live WSR-88D Doppler Radar</a>
+                    <a href="#meteogram">48-Hour Thermal Meteogram</a>
+                    <a href="#precip">Precipitation Planning Tiles</a>
+                    <a href="#forecast7">7-Day Extended Forecast</a>
+                    <a href="#discussion">Area Forecast Discussion (AFD)</a>
+                </div>
+                <div class="fcol">
+                    <h4>NWP MODELS & SUITE</h4>
+                    <a href="https://www.tropicaltidbits.com/" target="_blank">Tropical Tidbits Models</a>
+                    <a href="https://www.pivotalweather.com/model.php" target="_blank">Pivotal Weather (HRRR / NAM)</a>
+                    <a href="https://hdwx.tamu.edu/product-list/" target="_blank">HDWX Texas A&M Meteorology</a>
+                    <a href="https://weather.cod.edu/forecast/" target="_blank">College of DuPage (COD) Analysis</a>
+                </div>
+                <div class="fcol">
+                    <h4>FEDERAL DATA SOURCES</h4>
+                    <a href="https://www.weather.gov" target="_blank">National Weather Service (NWS)</a>
+                    <a href="https://www.spc.noaa.gov" target="_blank">Storm Prediction Center (SPC)</a>
+                    <a href="https://www.wpc.ncep.noaa.gov" target="_blank">Weather Prediction Center (WPC)</a>
+                    <a href="https://www.cpc.ncep.noaa.gov" target="_blank">Climate Prediction Center (CPC)</a>
+                </div>
+                <div class="fcol">
+                    <h4>CONSULTING & INQUIRIES</h4>
+                    <p style="font-size: 12px; color: #94a3b8; line-height: 1.6; margin-bottom: 8px;">
+                        Custom meteorological forecasting, Doppler radar analysis, and atmospheric data consulting:
+                    </p>
+                    <a href="mailto:oscarvegamail1@gmail.com" style="color: var(--yellow); font-weight: 700;">
+                        <i class="bi bi-envelope-fill me-1"></i> oscarvegamail1@gmail.com
+                    </a>
+                </div>
+            </div>
+            <div class="fbase">
+                <div>© VegaTex.Weather Dashboard · Meteorological Data in the Public Domain via NOAA & NWS NDFD</div>
+                <div class="ms-auto">Built with Leaflet, Open-Meteo, & Iowa Environmental Mesonet (IEM)</div>
+            </div>
+        </div>
+    </footer>
+
     <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <!-- Bootstrap JS Bundle -->
+    <!-- Bootstrap 5 JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- Application Logic -->
-    <script src="js/app.js?v=4.0"></script>
+    <!-- Core Application Engine -->
+    <script src="js/app.js?v=5.0"></script>
 </body>
 </html>
