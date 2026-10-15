@@ -17,14 +17,16 @@ const state = {
   radar: {
     map: null,
     marker: null,
+    mode: 'nexrad', // 'nexrad', 'loop', 'windy'
+    iemLayer: null,
     host: "https://tilecache.rainviewer.com",
     frames: [],
     layers: [],
     currentIndex: 0,
     isPlaying: false,
     intervalId: null,
-    colorScheme: 4, // NEXRAD Level III
-    opacity: 0.75,
+    colorScheme: 2, // Universal Blue (100% free, no API key needed)
+    opacity: 0.8,
     speedMs: 700
   }
 };
@@ -556,7 +558,7 @@ function renderTechInfo(props) {
 }
 
 /* ==========================================================================
-   Leaflet & RainViewer Live Radar
+   Multi-Source Live Radar: High-Res NEXRAD, RainViewer Loop & Windy
    ========================================================================== */
 
 async function initRadarMap() {
@@ -577,6 +579,15 @@ async function initRadarMap() {
     subdomains: 'abcd'
   }).addTo(state.radar.map);
 
+  // High-Resolution US NEXRAD N0Q Base Reflectivity Layer (IEM / NOAA)
+  // Free, high-resolution, full radar color scheme, no zoom caps, no API key needed
+  state.radar.iemLayer = L.tileLayer('https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/nexrad-n0q-900913/{z}/{x}/{y}.png', {
+    maxZoom: 18,
+    opacity: state.radar.opacity,
+    zIndex: 90,
+    attribution: 'Radar © NOAA / IEM'
+  }).addTo(state.radar.map);
+
   // Invalidate size once rendered
   setTimeout(() => {
     if (state.radar.map) state.radar.map.invalidateSize();
@@ -585,8 +596,11 @@ async function initRadarMap() {
   // Add initial location pin
   updateRadarMarker(state.coords.lat, state.coords.lon);
 
-  // Load RainViewer radar frames
+  // Pre-load RainViewer animated radar frames in background
   await loadRainViewerRadar();
+
+  // Set default mode UI
+  setRadarMode('nexrad');
 }
 
 function updateRadarMarker(lat, lon) {
@@ -607,6 +621,12 @@ function updateRadarMarker(lat, lon) {
 }
 
 function updateRadarMapLocation(lat, lon) {
+  // Update Windy iframe if active
+  const windyEl = document.getElementById("windy-frame");
+  if (windyEl) {
+    windyEl.src = `https://embed.windy.com/embed2.html?lat=${lat.toFixed(4)}&lon=${lon.toFixed(4)}&zoom=8&level=surface&overlay=radar&metricWind=kt&metricTemp=%C2%B0F&lightning=true`;
+  }
+
   if (!state.radar.map) {
     initRadarMap();
     return;
@@ -618,6 +638,66 @@ function updateRadarMapLocation(lat, lon) {
   }, 300);
 }
 
+// Mode Switcher: 'nexrad' (High-Res NWS), 'loop' (RainViewer), 'windy' (Windy + Lightning)
+function setRadarMode(mode) {
+  state.radar.mode = mode;
+
+  // Stop playback if switching away from loop
+  if (state.radar.isPlaying && mode !== 'loop') {
+    toggleRadarPlay();
+  }
+
+  // Update button active styling
+  ['nexrad', 'loop', 'windy'].forEach(m => {
+    const btn = document.getElementById(`btn-mode-${m}`);
+    if (btn) {
+      if (m === mode) btn.classList.add('active');
+      else btn.classList.remove('active');
+    }
+  });
+
+  const mapEl = document.getElementById('radar-map');
+  const windyEl = document.getElementById('windy-frame');
+  const playbackRow = document.getElementById('radar-playback-row');
+  const sourceBadge = document.getElementById('radar-source-badge');
+  const timeEl = document.getElementById('radar-timestamp');
+
+  if (mode === 'windy') {
+    if (mapEl) mapEl.style.display = 'none';
+    if (windyEl) {
+      windyEl.style.display = 'block';
+      if (!windyEl.src || windyEl.src === 'about:blank') {
+        windyEl.src = `https://embed.windy.com/embed2.html?lat=${state.coords.lat.toFixed(4)}&lon=${state.coords.lon.toFixed(4)}&zoom=8&level=surface&overlay=radar&metricWind=kt&metricTemp=%C2%B0F&lightning=true`;
+      }
+    }
+    if (playbackRow) playbackRow.style.display = 'none';
+    if (sourceBadge) sourceBadge.innerText = 'Windy Radar & Live Lightning';
+    if (timeEl) timeEl.innerHTML = '<span class="badge bg-primary">LIVE RADAR + LIGHTNING</span>';
+    return;
+  }
+
+  // Leaflet modes (nexrad or loop)
+  if (windyEl) windyEl.style.display = 'none';
+  if (mapEl) {
+    mapEl.style.display = 'block';
+    if (state.radar.map) state.radar.map.invalidateSize();
+  }
+
+  if (mode === 'nexrad') {
+    if (state.radar.iemLayer) state.radar.iemLayer.setOpacity(state.radar.opacity);
+    state.radar.layers.forEach(l => l.setOpacity(0));
+    if (playbackRow) playbackRow.style.display = 'none';
+    if (sourceBadge) sourceBadge.innerText = 'NWS / NOAA NEXRAD (High-Res)';
+    if (timeEl) timeEl.innerHTML = '<span class="badge bg-success">LIVE COMPOSITE</span>';
+  } else if (mode === 'loop') {
+    if (state.radar.iemLayer) state.radar.iemLayer.setOpacity(0);
+    if (playbackRow) playbackRow.style.display = 'flex';
+    if (sourceBadge) sourceBadge.innerText = 'RainViewer 2-Hr Doppler Loop';
+    showRadarFrame(state.radar.currentIndex);
+  }
+}
+window.setRadarMode = setRadarMode;
+
 async function loadRainViewerRadar() {
   try {
     const res = await fetch("https://api.rainviewer.com/public/weather-maps.json");
@@ -628,18 +708,23 @@ async function loadRainViewerRadar() {
 
     if (state.radar.frames.length === 0) return;
 
-    // Clear old layers
-    state.radar.layers.forEach(l => state.radar.map.removeLayer(l));
+    // Clear old animation layers
+    state.radar.layers.forEach(l => {
+      if (state.radar.map) state.radar.map.removeLayer(l);
+    });
     state.radar.layers = [];
 
     // Pre-create tile layers with opacity 0 to enable seamless switching
+    // CRITICAL: maxNativeZoom: 7 prevents "zoom level not supported" error on RainViewer free tier!
+    // CRITICAL: colorScheme 2 (Universal Blue) is officially supported on free tier without API key!
     state.radar.frames.forEach((frame) => {
-      const tileUrl = `${state.radar.host}${frame.path}/256/{z}/{x}/{y}/${state.radar.colorScheme}/1_1.png`;
+      const tileUrl = `${state.radar.host}${frame.path}/256/{z}/{x}/{y}/2/1_1.png`;
       const layer = L.tileLayer(tileUrl, {
         tileSize: 256,
         opacity: 0,
         zIndex: 100,
-        maxZoom: 18
+        maxZoom: 18,
+        maxNativeZoom: 7 // Prevents requesting tiles above zoom 7, Leaflet upscales client-side
       });
       layer.addTo(state.radar.map);
       state.radar.layers.push(layer);
@@ -652,8 +737,9 @@ async function loadRainViewerRadar() {
       slider.value = state.radar.frames.length - 1;
     }
 
-    // Show most recent frame
-    showRadarFrame(state.radar.frames.length - 1);
+    if (state.radar.mode === 'loop') {
+      showRadarFrame(state.radar.frames.length - 1);
+    }
 
   } catch (err) {
     console.error("RainViewer Radar load failed:", err);
@@ -666,7 +752,7 @@ function showRadarFrame(index) {
 
   state.radar.currentIndex = index;
 
-  // Toggle opacity
+  // Toggle opacity on RainViewer frames only
   state.radar.layers.forEach((layer, i) => {
     layer.setOpacity(i === index ? state.radar.opacity : 0);
   });
@@ -711,7 +797,6 @@ function toggleRadarPlay() {
 function initRadarControls() {
   const playBtn = document.getElementById("radar-play-btn");
   const slider = document.getElementById("radar-slider");
-  const colorSelect = document.getElementById("radar-color-scheme");
   const opacitySlider = document.getElementById("radar-opacity-slider");
 
   if (playBtn) playBtn.addEventListener("click", toggleRadarPlay);
@@ -723,17 +808,14 @@ function initRadarControls() {
     });
   }
 
-  if (colorSelect) {
-    colorSelect.addEventListener("change", (e) => {
-      state.radar.colorScheme = parseInt(e.target.value, 10);
-      loadRainViewerRadar();
-    });
-  }
-
   if (opacitySlider) {
     opacitySlider.addEventListener("input", (e) => {
       state.radar.opacity = parseFloat(e.target.value);
-      showRadarFrame(state.radar.currentIndex);
+      if (state.radar.mode === 'nexrad' && state.radar.iemLayer) {
+        state.radar.iemLayer.setOpacity(state.radar.opacity);
+      } else if (state.radar.mode === 'loop') {
+        showRadarFrame(state.radar.currentIndex);
+      }
     });
   }
 }
