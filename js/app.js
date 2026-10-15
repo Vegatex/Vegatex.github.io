@@ -573,19 +573,26 @@ async function initRadarMap() {
     attributionControl: false
   });
 
-  // CartoDB Dark Matter Base Tiles
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}{r}.png', {
-    maxZoom: 18,
-    subdomains: 'abcd'
+  // ESRI World Dark Gray Canvas Base (100% Free, No API Key, No Watermark)
+  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+    maxZoom: 16,
+    attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ'
   }).addTo(state.radar.map);
 
   // High-Resolution US NEXRAD N0Q Base Reflectivity Layer (IEM / NOAA)
   // Free, high-resolution, full radar color scheme, no zoom caps, no API key needed
   state.radar.iemLayer = L.tileLayer('https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/nexrad-n0q-900913/{z}/{x}/{y}.png', {
-    maxZoom: 18,
+    maxZoom: 16,
     opacity: state.radar.opacity,
     zIndex: 90,
-    attribution: 'Radar © NOAA / IEM'
+    attribution: 'Radar &copy; NOAA / IEM'
+  }).addTo(state.radar.map);
+
+  // ESRI City Names & County Borders Layer (Rendered on top of radar)
+  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}', {
+    maxZoom: 16,
+    zIndex: 110,
+    opacity: 0.85
   }).addTo(state.radar.map);
 
   // Invalidate size once rendered
@@ -596,10 +603,7 @@ async function initRadarMap() {
   // Add initial location pin
   updateRadarMarker(state.coords.lat, state.coords.lon);
 
-  // Pre-load RainViewer animated radar frames in background
-  await loadRainViewerRadar();
-
-  // Set default mode UI
+  // Set default mode UI (NEXRAD is primary)
   setRadarMode('nexrad');
 }
 
@@ -639,7 +643,7 @@ function updateRadarMapLocation(lat, lon) {
 }
 
 // Mode Switcher: 'nexrad' (High-Res NWS), 'loop' (RainViewer), 'windy' (Windy + Lightning)
-function setRadarMode(mode) {
+async function setRadarMode(mode) {
   state.radar.mode = mode;
 
   // Stop playback if switching away from loop
@@ -693,7 +697,12 @@ function setRadarMode(mode) {
     if (state.radar.iemLayer) state.radar.iemLayer.setOpacity(0);
     if (playbackRow) playbackRow.style.display = 'flex';
     if (sourceBadge) sourceBadge.innerText = 'RainViewer 2-Hr Doppler Loop';
-    showRadarFrame(state.radar.currentIndex);
+    if (state.radar.frames.length === 0) {
+      if (timeEl) timeEl.innerHTML = '<span class="badge bg-secondary">LOADING LOOP...</span>';
+      await loadRainViewerRadar();
+    } else {
+      showRadarFrame(state.radar.currentIndex);
+    }
   }
 }
 window.setRadarMode = setRadarMode;
