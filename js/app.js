@@ -18,6 +18,9 @@ const state = {
     map: null,
     marker: null,
     mode: 'nexrad', // 'nexrad', 'loop', 'windy'
+    product: 'N0Q', // 'N0Q' (composite), 'N0U' (velocity), 'N0S' (SRV), 'N0Z', 'NET'
+    siteCode: 'KGRK',
+    cleanSite: 'GRK',
     iemLayer: null,
     host: "https://tilecache.rainviewer.com",
     frames: [],
@@ -273,6 +276,17 @@ async function loadWeatherByCoords(lat, lon, cityLabel, stateLabel) {
 
     // Technical meteorological info
     renderTechInfo(props);
+
+    // Update local radar station ID
+    if (props.radarStation) {
+      state.radar.siteCode = props.radarStation;
+      state.radar.cleanSite = props.radarStation.replace(/^K/, '');
+      const dualPolBtn = document.getElementById("btn-dual-pol");
+      if (dualPolBtn) {
+        dualPolBtn.href = `https://radar.weather.gov/station/${state.radar.siteCode}/standard`;
+        dualPolBtn.title = `Open official NWS Level II Dual-Pol viewer for ${state.radar.siteCode} (CC, ZDR, Velocity couplets)`;
+      }
+    }
 
     // Render UI Components
     renderAlerts();
@@ -688,14 +702,17 @@ async function setRadarMode(mode) {
   }
 
   if (mode === 'nexrad') {
-    if (state.radar.iemLayer) state.radar.iemLayer.setOpacity(state.radar.opacity);
     state.radar.layers.forEach(l => l.setOpacity(0));
     if (playbackRow) playbackRow.style.display = 'none';
-    if (sourceBadge) sourceBadge.innerText = 'NWS / NOAA NEXRAD (High-Res)';
+    const productBar = document.getElementById('radar-product-bar');
+    if (productBar) productBar.style.display = 'flex';
+    updateNWSProductLayer();
     if (timeEl) timeEl.innerHTML = '<span class="badge bg-success">LIVE COMPOSITE</span>';
   } else if (mode === 'loop') {
     if (state.radar.iemLayer) state.radar.iemLayer.setOpacity(0);
     if (playbackRow) playbackRow.style.display = 'flex';
+    const productBar = document.getElementById('radar-product-bar');
+    if (productBar) productBar.style.display = 'none';
     if (sourceBadge) sourceBadge.innerText = 'RainViewer 2-Hr Doppler Loop';
     if (state.radar.frames.length === 0) {
       if (timeEl) timeEl.innerHTML = '<span class="badge bg-secondary">LOADING LOOP...</span>';
@@ -706,6 +723,84 @@ async function setRadarMode(mode) {
   }
 }
 window.setRadarMode = setRadarMode;
+
+function updateNWSProductLayer() {
+  if (!state.radar.map) return;
+  if (state.radar.iemLayer) {
+    state.radar.map.removeLayer(state.radar.iemLayer);
+  }
+
+  const prod = state.radar.product;
+  let tileUrl = '';
+  let badgeText = '';
+
+  if (prod === 'N0Q') {
+    tileUrl = 'https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/nexrad-n0q-900913/{z}/{x}/{y}.png';
+    badgeText = 'NWS / NOAA NEXRAD Base Reflectivity (Composite)';
+  } else {
+    // Single-site product from local WSR-88D station
+    tileUrl = `https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/ridge::${state.radar.cleanSite}-${prod}-0/{z}/{x}/{y}.png`;
+    const prodLabels = {
+      'N0U': `${state.radar.siteCode} Base Velocity (Radial Wind)`,
+      'N0S': `${state.radar.siteCode} Storm-Relative Motion (SRV)`,
+      'N0Z': `${state.radar.siteCode} Long-Range Reflectivity (248nm)`,
+      'NET': `${state.radar.siteCode} Echo Tops (Cloud Height)`
+    };
+    badgeText = prodLabels[prod] || `${state.radar.siteCode} ${prod}`;
+  }
+
+  state.radar.iemLayer = L.tileLayer(tileUrl, {
+    maxZoom: 16,
+    opacity: state.radar.opacity,
+    zIndex: 90,
+    attribution: 'Radar &copy; NOAA / IEM'
+  }).addTo(state.radar.map);
+
+  const sourceBadge = document.getElementById('radar-source-badge');
+  if (sourceBadge) sourceBadge.innerText = badgeText;
+}
+
+function setRadarProduct(prod) {
+  state.radar.product = prod;
+  if (state.radar.mode !== 'nexrad') {
+    setRadarMode('nexrad');
+  } else {
+    updateNWSProductLayer();
+  }
+}
+window.setRadarProduct = setRadarProduct;
+
+function toggleRadarFullscreen() {
+  const card = document.getElementById("radar-card");
+  const icon = document.getElementById("fullscreen-icon");
+  const text = document.getElementById("fullscreen-text");
+  if (!card) return;
+
+  card.classList.toggle("radar-fullscreen");
+  const isFull = card.classList.contains("radar-fullscreen");
+
+  if (icon) {
+    icon.className = isFull ? "bi bi-fullscreen-exit me-1" : "bi bi-arrows-fullscreen me-1";
+  }
+  if (text) {
+    text.innerText = isFull ? "Exit" : "Full Screen";
+  }
+
+  setTimeout(() => {
+    if (state.radar.map) state.radar.map.invalidateSize();
+  }, 200);
+}
+window.toggleRadarFullscreen = toggleRadarFullscreen;
+
+// Escape key exits fullscreen
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") {
+    const card = document.getElementById("radar-card");
+    if (card && card.classList.contains("radar-fullscreen")) {
+      toggleRadarFullscreen();
+    }
+  }
+});
 
 async function loadRainViewerRadar() {
   try {
