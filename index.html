@@ -18,7 +18,7 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     
     <!-- Custom Texas A&M Maroon Design System & Light/Dark Theme -->
-    <link rel="stylesheet" href="css/style.css?v=8.0">
+    <link rel="stylesheet" href="css/style.css?v=9.0">
 </head>
 <body>
 
@@ -339,38 +339,40 @@
             </div>
         </section>
 
-        <!-- SECTION: NWP MODEL GUIDANCE STUDIO & ENSO TRACKING (FORECAST EAGLE WORKSTATION) -->
+        <!-- SECTION: NWP MODEL GUIDANCE STUDIO & ENSO TRACKING (100% IN-HOUSE VEGATEX WORKSTATION) -->
         <section id="models">
             <div class="rule">
                 <h2><i class="bi bi-cpu-fill text-info"></i> In-House NWP Model Guidance Studio & ENSO Tracking</h2>
                 <span class="ln"></span>
-                <span class="sub">INTERACTIVE FORECAST WORKSTATION · NOAA NCEP RRFS, HRRR, GFS, NBM, REFS & AI ENGINES</span>
+                <span class="sub">INTERACTIVE FORECAST STUDIO · NOAA NCEP HRRR, RRFS, GFS, NBM & ECMWF ENGINES</span>
             </div>
 
-            <!-- In-House Forecast Eagle Model Studio -->
+            <!-- In-House Vegatex Numerical Model Studio (100% Native Leaflet Canvas) -->
             <div class="model-studio-card" id="model-studio-card">
                 <!-- Studio Control Toolbar -->
                 <div class="model-toolbar-bar">
                     <div class="d-flex align-items-center gap-2" id="model-status-headline">
                         <span class="pulse-indicator"></span>
-                        <span class="mono" style="font-weight: 800; color: var(--maroon-light);">RRFS CONUS</span>
-                        <span class="mono text-muted d-none d-sm-inline">· COMPOSITE REFLECTIVITY · 3 KM</span>
+                        <span class="mono" style="font-weight: 800; color: var(--maroon-light);">HRRR CONUS 3KM</span>
+                        <span class="mono text-muted d-none d-sm-inline">· SIMULATED REFLECTIVITY · LATEST NCEP CYCLE</span>
                     </div>
 
                     <div class="d-flex align-items-center gap-2">
-                        <button class="btn-studio-action" id="model-fullscreen-btn" onclick="toggleModelFullscreen()" title="Toggle full-screen theater workstation">
+                        <div class="btn-group btn-group-sm" role="group">
+                            <button class="btn-studio-action" onclick="zoomModelDomain('tx')" title="Zoom to Texas Domain">
+                                <i class="bi bi-geo-alt-fill text-danger"></i> Texas
+                            </button>
+                            <button class="btn-studio-action" onclick="zoomModelDomain('conus')" title="Zoom to CONUS Domain">
+                                <i class="bi bi-arrows-angle-expand text-primary"></i> CONUS
+                            </button>
+                        </div>
+                        <button class="btn-studio-action" id="model-fullscreen-btn" onclick="toggleModelFullscreen()" title="Toggle Fullscreen Theater Workstation">
                             <i class="bi bi-arrows-fullscreen"></i> <span class="d-none d-sm-inline">Theater Mode</span>
                         </button>
-                        <button class="btn-studio-action" onclick="refreshModelStudio()" title="Reload live data stream">
-                            <i class="bi bi-arrow-clockwise"></i> <span class="d-none d-sm-inline">Reload</span>
-                        </button>
-                        <a class="btn-studio-action" id="model-external-link" href="https://forecasteagle.com/rrfs/conus/refc" target="_blank" title="Open Forecast Eagle explorer in standalone tab">
-                            <i class="bi bi-box-arrow-up-right"></i> <span class="d-none d-sm-inline">Standalone</span>
-                        </a>
                     </div>
                 </div>
 
-                <!-- Top Model Selector Tabs (RRFS, HRRR, GFS, NBM, REFS, WN3, ECMWF, RTMA) -->
+                <!-- Top Model Selector Tabs (HRRR, RRFS, GFS, NBM, ECMWF, AIFS, GraphCast) -->
                 <div class="model-selector-bar" id="model-pills-container">
                     <!-- Populated dynamically by app.js -->
                 </div>
@@ -380,17 +382,51 @@
                     <!-- Populated dynamically by app.js -->
                 </div>
 
-                <!-- In-House Interactive Model Viewport Screen -->
+                <!-- In-House Interactive Model Viewport Map Screen -->
                 <div class="model-viewport-screen" id="model-viewport-screen">
-                    <iframe 
-                        id="model-explorer-frame" 
-                        class="model-iframe" 
-                        src="https://forecasteagle.com/rrfs/conus/refc" 
-                        title="NWP Model Explorer"
-                        loading="lazy"
-                        allow="geolocation; fullscreen"
-                        allowfullscreen>
-                    </iframe>
+                    <div id="model-leaflet-map"></div>
+                    
+                    <!-- Probed Point Model Evaluation Card (Overlay) -->
+                    <div id="model-point-probe-card" class="model-probe-card d-none">
+                        <!-- Populated dynamically on map click -->
+                    </div>
+
+                    <!-- Radar dBZ Color Scale Legend (Overlay) -->
+                    <div id="model-radar-legend" class="model-legend-overlay">
+                        <div class="legend-title mono">SIMULATED REFLECTIVITY (dBZ)</div>
+                        <div class="legend-bar-dbz"></div>
+                        <div class="legend-labels mono">
+                            <span>5</span><span>15</span><span>25</span><span>35</span><span>45</span><span>55</span><span>65+</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Model Interactive Timeline & Scrubber Controller -->
+                <div class="model-timeline-bar" id="model-timeline-bar">
+                    <div class="d-flex align-items-center gap-2">
+                        <button class="model-step-btn" onclick="stepModelForecast(-1)" title="Step Back 1 Hour (←)">
+                            <i class="bi bi-skip-backward-fill"></i>
+                        </button>
+                        <button class="model-step-btn play-btn" id="model-play-btn" onclick="toggleModelLoop()" title="Play / Pause Forecast Loop (Space)">
+                            <i class="bi bi-play-fill" id="model-play-icon"></i>
+                        </button>
+                        <button class="model-step-btn" onclick="stepModelForecast(1)" title="Step Forward 1 Hour (→)">
+                            <i class="bi bi-skip-forward-fill"></i>
+                        </button>
+
+                        <div class="d-flex align-items-center gap-2 px-2">
+                            <input type="range" class="form-range model-time-slider" id="model-timeline-slider" min="0" max="18" step="1" value="0" oninput="onModelSliderInput(this.value)">
+                        </div>
+
+                        <span class="badge rounded-pill px-3 py-1 mono" id="model-valid-timestamp" style="background: var(--card-bg); border: 1px solid var(--line); color: var(--text-main); font-size: 11px;">
+                            F+00H · LATEST NCEP RUN · VALID NOW
+                        </span>
+                    </div>
+
+                    <div class="d-flex align-items-center gap-2 mono" style="font-size: 11px; color: var(--text-muted);">
+                        <span><i class="bi bi-broadcast text-success me-1"></i> IN-HOUSE NCEP / IEM STREAM</span>
+                        <span class="d-none d-md-inline">· CLICK MAP TO PROBE</span>
+                    </div>
                 </div>
 
                 <!-- Model Information & Guidance Strip -->
@@ -562,6 +598,6 @@
     <!-- Bootstrap 5 JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <!-- Core Application Engine -->
-    <script src="js/app.js?v=8.0"></script>
+    <script src="js/app.js?v=9.0"></script>
 </body>
 </html>

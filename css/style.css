@@ -1277,7 +1277,7 @@ section[id] {
   color: #fff;
 }
 
-/* Forecast Eagle Interactive Model Studio Workstation */
+/* VegaTex In-House Interactive Model Guidance Studio Workstation */
 .model-studio-card {
   position: relative;
   transition: all 0.2s ease;
@@ -1354,30 +1354,214 @@ section[id] {
   animation: pulse 1.8s infinite;
 }
 
-/* In-House Model Viewport Screen & Interactive Frame */
+/* In-House Model Viewport Screen & Interactive Leaflet Canvas */
 .model-viewport-screen {
   position: relative;
   width: 100%;
-  height: 680px;
+  height: 600px;
   background: var(--card-bg-sub);
   display: flex;
-  align-items: center;
-  justify-content: center;
+  align-items: stretch;
+  justify-content: stretch;
   overflow: hidden;
 }
 
 @media (max-width: 768px) {
   .model-viewport-screen {
-    height: 520px;
+    height: 480px;
   }
 }
 
-.model-iframe {
+#model-leaflet-map {
   width: 100%;
   height: 100%;
-  border: none;
-  display: block;
-  background: #111;
+  min-height: 480px;
+  background: var(--bg-main);
+  z-index: 1;
+}
+
+/* Radar dBZ Color Legend Overlay */
+.model-legend-overlay {
+  position: absolute;
+  bottom: 16px;
+  right: 14px;
+  z-index: 400;
+  background: rgba(18, 18, 18, 0.88);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  pointer-events: none;
+}
+
+.legend-title {
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: #e2e8f0;
+  margin-bottom: 5px;
+  text-align: center;
+}
+
+.legend-bar-dbz {
+  height: 10px;
+  width: 190px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, 
+    rgba(4, 233, 231, 0.8) 0%, 
+    rgba(1, 159, 244, 0.9) 15%, 
+    rgba(0, 0, 246, 1) 25%, 
+    rgba(0, 255, 0, 1) 35%, 
+    rgba(0, 200, 0, 1) 45%, 
+    rgba(255, 255, 0, 1) 55%, 
+    rgba(255, 140, 0, 1) 68%, 
+    rgba(255, 0, 0, 1) 80%, 
+    rgba(214, 0, 0, 1) 90%, 
+    rgba(255, 0, 255, 1) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.legend-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 9px;
+  color: #94a3b8;
+  margin-top: 3px;
+}
+
+/* Floating Model Point Probe Card */
+.model-probe-card {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  z-index: 400;
+  background: var(--card-bg);
+  border: 1px solid var(--maroon-light);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+  max-width: 290px;
+  animation: fadeIn 0.2s ease;
+}
+
+/* Model Spatial Scalar Grid & Station Markers */
+.model-map-badge-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: auto;
+  cursor: pointer;
+  transform: translate(-50%, -50%);
+  user-select: none;
+}
+
+.model-map-badge {
+  padding: 2px 7px;
+  border-radius: 9999px;
+  font-family: 'Overpass Mono', monospace;
+  font-size: 11px;
+  font-weight: 800;
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  white-space: nowrap;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.model-map-badge-wrap:hover .model-map-badge {
+  transform: scale(1.15);
+  box-shadow: 0 0 12px rgba(255, 255, 255, 0.9);
+}
+
+.model-map-city {
+  font-family: 'Overpass', sans-serif;
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--text-main);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9), 0 0 6px rgba(0, 0, 0, 0.95);
+  white-space: nowrap;
+  margin-top: 2px;
+  letter-spacing: 0.02em;
+}
+
+[data-theme="light"] .model-map-city {
+  color: #0f172a;
+  text-shadow: 0 1px 3px rgba(255, 255, 255, 0.9), 0 0 6px rgba(255, 255, 255, 0.95);
+}
+
+.custom-probe-pin {
+  animation: bouncePin 0.4s ease;
+}
+
+@keyframes bouncePin {
+  0% { transform: scale(0.3) translateY(-20px); opacity: 0; }
+  70% { transform: scale(1.2) translateY(2px); opacity: 1; }
+  100% { transform: scale(1) translateY(0); }
+}
+
+.model-svg-curve {
+  transition: stroke-dashoffset 0.3s ease;
+}
+
+.model-playhead-line {
+  stroke: var(--maroon-light);
+  stroke-width: 2;
+  stroke-dasharray: 4, 3;
+}
+
+/* Model Interactive Timeline Controller */
+.model-timeline-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 16px;
+  background: var(--card-bg-sub);
+  border-top: 1px solid var(--line);
+  flex-wrap: wrap;
+}
+
+.model-step-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: var(--card-bg);
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.model-step-btn:hover {
+  background: var(--maroon);
+  color: #fff;
+  border-color: var(--maroon-light);
+}
+
+.model-step-btn.play-btn {
+  background: var(--maroon);
+  color: #fff;
+  border-color: var(--maroon-light);
+  box-shadow: 0 0 8px var(--maroon-glow);
+}
+
+.model-time-slider {
+  width: 140px;
+  accent-color: var(--maroon);
+  cursor: pointer;
+}
+@media (min-width: 576px) {
+  .model-time-slider {
+    width: 200px;
+  }
 }
 
 /* Model Intelligence Dossier & Guidance Strip */
