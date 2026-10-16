@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VegaTex.Weather | Operational Meteorological Platform & NWP Guidance</title>
+    <title>VegaTex.Weather | Operational Meteorological Platform & In-House NWP Studio</title>
     
     <!-- Meteorological & Monospace Typography: Overpass, Overpass Mono, Barlow Condensed -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -18,7 +18,7 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     
     <!-- Custom Texas A&M Maroon Design System & Light/Dark Theme -->
-    <link rel="stylesheet" href="css/style.css?v=6.1">
+    <link rel="stylesheet" href="css/style.css?v=7.0">
 </head>
 <body>
 
@@ -76,7 +76,7 @@
                 <a href="#precip">PRECIP OUTLOOK</a>
                 <a href="#forecast7">7-DAY FORECAST</a>
                 <a href="#discussion">NWS DISCUSSION</a>
-                <a href="#models">NWP MODELS & ENSO</a>
+                <a href="#models">NWP MODEL STUDIO</a>
             </nav>
         </div>
     </div>
@@ -158,12 +158,12 @@
 
             <div class="card" id="radar-card">
                 <!-- Radar Control Bar Header -->
-                <div class="p-3 border-bottom border-white border-opacity-10 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <div class="p-3 border-bottom border-secondary border-opacity-25 d-flex justify-content-between align-items-center flex-wrap gap-2">
                     <div class="d-flex align-items-center gap-2">
-                        <span class="badge bg-dark border border-secondary text-white-50 mono" style="font-size: 11px;">
+                        <span class="badge rounded-pill px-2 py-1 mono" style="background: var(--card-bg-sub); border: 1px solid var(--line); color: var(--text-main); font-size: 11px;">
                             <i class="bi bi-broadcast text-success me-1"></i> HIGH-RES NO-LIMIT TILE ENGINE
                         </span>
-                        <button class="btn btn-sm btn-outline-light rounded-pill px-2 py-0" id="btn-radar-fullscreen" onclick="toggleRadarFullscreen()" title="Toggle Full-Screen Doppler Radar View (Esc to Exit)">
+                        <button class="btn-card-action" id="btn-radar-fullscreen" onclick="toggleRadarFullscreen()" title="Toggle Full-Screen Doppler Radar View (Esc to Exit)">
                             <i class="bi bi-arrows-fullscreen me-1" id="fullscreen-icon"></i><span id="fullscreen-text">Full Screen</span>
                         </button>
                     </div>
@@ -180,10 +180,10 @@
                 </div>
 
                 <!-- Radar Product Selector & Dual-Pol Bar -->
-                <div class="px-3 py-2 border-bottom border-white border-opacity-10 d-flex justify-content-between align-items-center flex-wrap gap-2" id="radar-product-bar" style="background: rgba(15, 23, 42, 0.5);">
+                <div class="px-3 py-2 border-bottom border-secondary border-opacity-25 d-flex justify-content-between align-items-center flex-wrap gap-2" id="radar-product-bar" style="background: var(--card-bg-sub);">
                     <div class="d-flex align-items-center gap-2">
                         <span class="mono text-muted" style="font-size: 11px;"><i class="bi bi-layers-fill text-info me-1"></i>PRODUCT:</span>
-                        <select id="radar-product-select" class="form-select form-select-sm bg-dark text-white border-secondary mono" style="width: auto; font-size: 0.8rem;" onchange="setRadarProduct(this.value)">
+                        <select id="radar-product-select" class="wx-select" onchange="setRadarProduct(this.value)">
                             <option value="N0Q" selected>Base Reflectivity (Composite)</option>
                             <option value="N0U">Doppler Velocity (Radial Wind)</option>
                             <option value="N0S">Storm-Relative Motion (Rotation / SRV)</option>
@@ -224,10 +224,10 @@
                     </div>
 
                     <!-- Secondary Settings & Legend -->
-                    <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top border-white border-opacity-10 flex-wrap gap-2">
+                    <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top border-secondary border-opacity-25 flex-wrap gap-2">
                         <div class="d-flex align-items-center gap-2">
                             <span class="mono text-muted" style="font-size: 11px;">FEED:</span>
-                            <span class="badge bg-dark bg-opacity-75 text-info border border-info border-opacity-25 mono" id="radar-source-badge" style="font-size: 11px;">
+                            <span class="badge rounded-pill px-2 py-1 mono" id="radar-source-badge" style="background: var(--card-bg); border: 1px solid var(--line); color: var(--blue-light); font-size: 11px;">
                                 NWS / NOAA NEXRAD Base Reflectivity (Composite)
                             </span>
                         </div>
@@ -333,94 +333,71 @@
             <div class="card p-3">
                 <div class="d-flex justify-content-between align-items-center mb-2 px-1">
                     <span class="mono text-muted" style="font-size: 11px;">DIRECT NWS FORECASTER TECHNICAL REASONING & METEOROLOGICAL ANALYSIS</span>
-                    <span class="badge bg-dark border border-secondary text-info mono" style="font-size: 10px;">LIVE NO-CUT TEXT</span>
+                    <span class="badge rounded-pill px-2 py-1 mono" style="background: var(--card-bg-sub); border: 1px solid var(--line); color: var(--blue-light); font-size: 10px;">LIVE NO-CUT TEXT</span>
                 </div>
                 <pre class="afd-box" id="nws-afd-text">Fetching official Area Forecast Discussion (AFD) from National Weather Service...</pre>
             </div>
         </section>
 
-        <!-- SECTION: NWP MODEL GUIDANCE SUITE & ENSO TRACKING -->
+        <!-- SECTION: NWP MODEL GUIDANCE STUDIO & ENSO TRACKING (WEATHERFRONT STYLE) -->
         <section id="models">
             <div class="rule">
-                <h2><i class="bi bi-cpu-fill text-info"></i> NWP Model Guidance Suite & ENSO Tracking</h2>
+                <h2><i class="bi bi-cpu-fill text-info"></i> In-House NWP Model Guidance Studio & ENSO Tracking</h2>
                 <span class="ln"></span>
-                <span class="sub">HIGH-RES CONVECTIVE, GLOBAL DYNAMICAL & AI NEURAL FORECAST SYSTEMS</span>
+                <span class="sub">INTERACTIVE FORECAST STUDIO · 7 NUMERICAL, CONVECTIVE & AI ENGINES</span>
             </div>
 
-            <!-- Model Selection Bar -->
-            <div class="card p-3 mb-4">
-                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2 pb-2 border-bottom border-white border-opacity-10">
-                    <div class="mono" style="font-size: 12px; font-weight: 800; color: var(--maroon-light);">
-                        SELECT NUMERICAL WEATHER PREDICTION MODEL (7 OPERATIONAL SYSTEMS):
-                    </div>
-                    <div class="mono text-muted" style="font-size: 11px;">
-                        CLICK TO INSPECT ARCHITECTURE & DATA FEEDS
-                    </div>
-                </div>
-
+            <!-- In-House WeatherFront-Style Model Studio -->
+            <div class="model-studio-card">
+                <!-- Top Model Selector Tabs (GFS, AIGFS, HRRR, RRFS, ECMWF, AIFS, NBM) -->
                 <div class="model-selector-bar" id="model-pills-container">
-                    <!-- Populated dynamically by app.js with GFS, AIGFS, HRRR, RRFS, ECMWF, AIFS, NBM -->
+                    <!-- Populated dynamically by app.js -->
                 </div>
 
-                <!-- Spotlight Model Technical Dossier -->
-                <div id="model-spotlight-container" class="mt-3">
-                    <!-- Populated dynamically by selectNWPModel() -->
+                <!-- Parameter Selector Strip -->
+                <div class="model-param-bar" id="model-param-bar">
+                    <!-- Populated dynamically by app.js -->
                 </div>
 
-                <!-- Interactive Guidance Run Generator -->
-                <div class="mt-3 p-3 rounded" style="background: var(--card-bg-sub); border: 1px solid var(--line);">
-                    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
-                        <div class="d-flex align-items-center gap-2 flex-wrap">
-                            <span class="mono text-muted" style="font-size: 11px;">LAUNCH MODEL GUIDANCE:</span>
-                            
-                            <select id="nwp-launch-model" class="form-select form-select-sm bg-dark text-white border-secondary mono" style="width: auto; font-size: 0.82rem;">
-                                <option value="hrrr" selected>HRRR (3km Rapid Refresh)</option>
-                                <option value="rrfs" >RRFS (Next-Gen Convective)</option>
-                                <option value="gfs">GFS (Global 13km)</option>
-                                <option value="aigfs">AIGFS (NOAA GraphCast AI)</option>
-                                <option value="ecmwf_full">ECMWF (Euro IFS 9km)</option>
-                                <option value="aifs">AIFS (ECMWF Graph Neural AI)</option>
-                                <option value="nbm">NBM (National Blend)</option>
-                            </select>
+                <!-- In-House Interactive Model Viewport Screen -->
+                <div class="model-viewport-screen" id="model-viewport-screen">
+                    <div class="text-muted p-4 mono">Loading In-House Model Guidance Engine...</div>
+                </div>
 
-                            <select id="nwp-launch-param" class="form-select form-select-sm bg-dark text-white border-secondary mono" style="width: auto; font-size: 0.82rem;">
-                                <option value="ref" selected>Simulated Composite Radar</option>
-                                <option value="500h_avort">500mb Heights & Vorticity</option>
-                                <option value="2m_tmp">2m Surface Temperature</option>
-                                <option value="2m_tmp_anom">2m Temperature Anomaly</option>
-                                <option value="qpf_acc">Total QPF Liquid Accumulation</option>
-                                <option value="10m_wnd_gst">10m Surface Wind Gusts</option>
-                                <option value="sbcape">Surface-Based CAPE (Instability)</option>
-                            </select>
-
-                            <select id="nwp-launch-sector" class="form-select form-select-sm bg-dark text-white border-secondary mono" style="width: auto; font-size: 0.82rem;">
-                                <option value="tx" selected>Texas / Southern Plains</option>
-                                <option value="conus">CONUS (National)</option>
-                                <option value="sc">South Central US</option>
-                                <option value="global">Global Hemispheric</option>
-                            </select>
-                        </div>
-
-                        <button class="btn btn-sm btn-primary rounded-pill px-3 py-1 mono font-weight-bold" onclick="launchModelGuidance()" title="Open live interactive model guidance graphics">
-                            <i class="bi bi-box-arrow-up-right me-1"></i> Launch Guidance Run ↗
+                <!-- Model Timeline & Scrubber Controller -->
+                <div class="model-timeline-bar" id="model-timeline-bar">
+                    <div class="d-flex align-items-center gap-2">
+                        <button class="model-step-btn" onclick="stepNWPLeadHour(-6)" title="Previous 6 Hours">
+                            <i class="bi bi-skip-backward-fill"></i>
                         </button>
+                        <button class="model-step-btn play-btn" onclick="stepNWPLeadHour(6)" title="Advance 6 Hours">
+                            <i class="bi bi-skip-forward-fill"></i>
+                        </button>
+                        <span class="badge rounded-pill px-2 py-1 mono" id="model-valid-timestamp" style="background: var(--card-bg); border: 1px solid var(--line); color: var(--text-main); font-size: 11px;">
+                            F+24H · 18Z RUN · VALID OVERVIEW
+                        </span>
+                    </div>
+
+                    <div class="d-flex align-items-center gap-2 mono" style="font-size: 11px; color: var(--text-muted);">
+                        <span><i class="bi bi-broadcast text-success me-1"></i> DIRECT IN-HOUSE ENGINE</span>
+                        <span class="d-none d-sm-inline">· ZERO EXTERNAL REDIRECT</span>
                     </div>
                 </div>
             </div>
 
             <!-- Multi-Model Consensus Forecast Table -->
             <div class="card p-3 mb-4">
-                <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom border-white border-opacity-10">
+                <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom border-secondary border-opacity-25">
                     <div>
-                        <h3 class="h6 mb-0 text-white font-weight-bold d-flex align-items-center gap-2">
+                        <h3 class="h6 mb-0 font-weight-bold d-flex align-items-center gap-2" style="color: var(--text-main);">
                             <i class="bi bi-table text-info"></i> Multi-Model Consensus Forecast Spread
                         </h3>
                         <div class="mono text-muted" style="font-size: 11px;">
-                            COMPARISON ACROSS OPERATIONAL PHYSICS & AI NEURAL ARCHITECTURES
+                            POINT SPREAD & CONFIDENCE ACROSS ALL 7 FORECAST ENGINES
                         </div>
                     </div>
-                    <span class="badge bg-dark border border-secondary text-info mono" style="font-size: 10px;">
-                        LIVE SPREAD CONSENSUS
+                    <span class="badge rounded-pill px-2 py-1 mono" style="background: var(--card-bg-sub); border: 1px solid var(--line); color: var(--text-main); font-size: 10px;">
+                        LIVE SPREAD
                     </span>
                 </div>
 
@@ -443,37 +420,36 @@
                 </div>
             </div>
 
-            <!-- Two Columns: Operational Links & ENSO Monitoring -->
+            <!-- Two Columns: Portals (with fixed contrast!) & ENSO -->
             <div class="row g-4">
-                <!-- Left: NWP Model Operational Hubs -->
                 <div class="col-lg-6">
                     <div class="card p-3 h-100">
-                        <div class="d-flex align-items-center gap-2 mb-3 pb-2 border-bottom border-white border-opacity-10">
+                        <div class="d-flex align-items-center gap-2 mb-3 pb-2 border-bottom border-secondary border-opacity-25">
                             <i class="bi bi-grid-3x3-gap-fill text-info"></i>
-                            <h3 class="h6 mb-0 text-white font-weight-bold">Operational Guidance Portals & Resources</h3>
+                            <h3 class="h6 mb-0 font-weight-bold" style="color: var(--text-main);">Operational Guidance Portals & Resources</h3>
                         </div>
                         <div class="list-group list-group-flush bg-transparent">
-                            <a href="https://hdwx.tamu.edu/product-list/" target="_blank" class="list-group-item list-group-item-action bg-transparent text-white border-secondary d-flex justify-content-between align-items-center px-0 py-2">
+                            <a href="https://hdwx.tamu.edu/product-list/" target="_blank" class="list-group-item list-group-item-action bg-transparent model-portal-link d-flex justify-content-between align-items-center px-0 py-2">
                                 <span><i class="bi bi-building text-danger me-2"></i>HDWX Texas A&M University Meteorology</span>
                                 <i class="bi bi-box-arrow-up-right text-muted" style="font-size: 0.8rem;"></i>
                             </a>
-                            <a href="https://www.tropicaltidbits.com/" target="_blank" class="list-group-item list-group-item-action bg-transparent text-white border-secondary d-flex justify-content-between align-items-center px-0 py-2">
-                                <span><i class="bi bi-tropical-storm text-warning me-2"></i>Tropical Tidbits (GFS, ECMWF, HWRF)</span>
+                            <a href="https://www.tropicaltidbits.com/" target="_blank" class="list-group-item list-group-item-action bg-transparent model-portal-link d-flex justify-content-between align-items-center px-0 py-2">
+                                <span><i class="bi bi-tropical-storm text-warning me-2"></i>Tropical Tidbits Analysis & Loops</span>
                                 <i class="bi bi-box-arrow-up-right text-muted" style="font-size: 0.8rem;"></i>
                             </a>
-                            <a href="https://www.pivotalweather.com/model.php" target="_blank" class="list-group-item list-group-item-action bg-transparent text-white border-secondary d-flex justify-content-between align-items-center px-0 py-2">
-                                <span><i class="bi bi-graph-up text-info me-2"></i>Pivotal Weather (HRRR, RRFS, GEFS)</span>
+                            <a href="https://www.pivotalweather.com/model.php" target="_blank" class="list-group-item list-group-item-action bg-transparent model-portal-link d-flex justify-content-between align-items-center px-0 py-2">
+                                <span><i class="bi bi-graph-up text-info me-2"></i>Pivotal Weather (HRRR, RRFS, GFS)</span>
                                 <i class="bi bi-box-arrow-up-right text-muted" style="font-size: 0.8rem;"></i>
                             </a>
-                            <a href="https://weather.cod.edu/forecast/" target="_blank" class="list-group-item list-group-item-action bg-transparent text-white border-secondary d-flex justify-content-between align-items-center px-0 py-2">
+                            <a href="https://weather.cod.edu/forecast/" target="_blank" class="list-group-item list-group-item-action bg-transparent model-portal-link d-flex justify-content-between align-items-center px-0 py-2">
                                 <span><i class="bi bi-layers text-success me-2"></i>College of DuPage (COD) NEXRAD & Sat</span>
                                 <i class="bi bi-box-arrow-up-right text-muted" style="font-size: 0.8rem;"></i>
                             </a>
-                            <a href="https://sites.gsl.noaa.gov/desi/?x4dLocations=%5B%22City%22%2C%22DSS%22%2C%22Station-ASOS%22%2C%22Station-AWOS%22%2C%22Station-RAWS%22%2C%22Station-OTHER%22%5D&chart=x4d&lat=40&lon=-105&theme=dark" target="_blank" class="list-group-item list-group-item-action bg-transparent text-white border-secondary d-flex justify-content-between align-items-center px-0 py-2">
+                            <a href="https://sites.gsl.noaa.gov/desi/?x4dLocations=%5B%22City%22%2C%22DSS%22%2C%22Station-ASOS%22%2C%22Station-AWOS%22%2C%22Station-RAWS%22%2C%22Station-OTHER%22%5D&chart=x4d&lat=40&lon=-105&theme=dark" target="_blank" class="list-group-item list-group-item-action bg-transparent model-portal-link d-flex justify-content-between align-items-center px-0 py-2">
                                 <span><i class="bi bi-diagram-3 text-info me-2"></i>NOAA GSL DESI Ensemble Viewer (HREF)</span>
                                 <i class="bi bi-box-arrow-up-right text-muted" style="font-size: 0.8rem;"></i>
                             </a>
-                            <a href="https://www.spc.noaa.gov/products/outlook/day1otlk.html" target="_blank" class="list-group-item list-group-item-action bg-transparent text-white border-0 d-flex justify-content-between align-items-center px-0 py-2">
+                            <a href="https://www.spc.noaa.gov/products/outlook/day1otlk.html" target="_blank" class="list-group-item list-group-item-action bg-transparent model-portal-link d-flex justify-content-between align-items-center px-0 py-2 border-0">
                                 <span><i class="bi bi-lightning-charge-fill text-warning me-2"></i>Storm Prediction Center (SPC) Day 1</span>
                                 <i class="bi bi-box-arrow-up-right text-muted" style="font-size: 0.8rem;"></i>
                             </a>
@@ -481,17 +457,16 @@
                     </div>
                 </div>
 
-                <!-- Right: El Niño / Southern Oscillation (ENSO) Monitoring -->
                 <div class="col-lg-6">
                     <div class="card p-3 h-100">
-                        <div class="d-flex align-items-center gap-2 mb-2 pb-2 border-bottom border-white border-opacity-10">
+                        <div class="d-flex align-items-center gap-2 mb-2 pb-2 border-bottom border-secondary border-opacity-25">
                             <i class="bi bi-water text-primary"></i>
-                            <h3 class="h6 mb-0 text-white font-weight-bold">El Niño / Southern Oscillation (ENSO) Tracking</h3>
+                            <h3 class="h6 mb-0 font-weight-bold" style="color: var(--text-main);">El Niño / Southern Oscillation (ENSO) Tracking</h3>
                         </div>
                         <p class="text-secondary mb-2" style="font-size: 0.88rem; line-height: 1.5;">
                             Equatorial Pacific Sea Surface Temperature (SST) anomalies driving North American storm tracks, subtropical jet positions, and seasonal teleconnections.
                         </p>
-                        <div class="text-center p-2 rounded bg-dark bg-opacity-50 border border-white border-opacity-10">
+                        <div class="text-center p-2 rounded" style="background: var(--card-bg-sub); border: 1px solid var(--line);">
                             <img src="https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/enso_update/ssta_c.gif" 
                                  alt="NOAA CPC Niño Region Sea Surface Temperature Anomalies" 
                                  class="img-fluid rounded" 
@@ -573,6 +548,6 @@
     <!-- Bootstrap 5 JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <!-- Core Application Engine -->
-    <script src="js/app.js?v=6.1"></script>
+    <script src="js/app.js?v=7.0"></script>
 </body>
 </html>
