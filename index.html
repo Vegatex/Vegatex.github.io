@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VegaTex.Weather | High-Performance Civic Meteorological Dashboard</title>
+    <title>VegaTex.Weather | Operational Meteorological Platform & NWP Guidance</title>
     
-    <!-- Civic & Monospace Typography: Overpass, Overpass Mono, Barlow Condensed -->
+    <!-- Meteorological & Monospace Typography: Overpass, Overpass Mono, Barlow Condensed -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800;900&family=Overpass+Mono:wght@400;600;700;800&family=Overpass:wght@400;600;700;800;900&display=swap" rel="stylesheet">
@@ -17,15 +17,15 @@
     <!-- Leaflet CSS for Doppler Radar -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     
-    <!-- Custom Civic Meteorological Design System -->
-    <link rel="stylesheet" href="css/style.css?v=5.0">
+    <!-- Custom Texas A&M Maroon Design System & Light/Dark Theme -->
+    <link rel="stylesheet" href="css/style.css?v=6.0">
 </head>
 <body>
 
-    <!-- Civic Highway Sign Header (weather.city style) -->
+    <!-- Texas A&M Maroon Meteorological Header -->
     <div class="fchwrap">
         <header class="wrap fch">
-            <a class="fcbrand" href="#" title="VegaTex.Weather Dashboard">
+            <a class="fcbrand" href="#" title="VegaTex.Weather Meteorological Platform">
                 <span class="w1">VEGATEX</span><span class="w2">.WEATHER</span>
                 <span class="wbadge">METEOROLOGY</span>
             </a>
@@ -33,7 +33,7 @@
             <!-- Search Ramp & Geolocation -->
             <div class="fcfind">
                 <form class="ramp" id="ramp" role="search">
-                    <input type="text" id="q" placeholder="Enter US city or ZIP (e.g. Bryan, TX or 77801)" autocomplete="off" spellcheck="false">
+                    <input type="text" id="q" placeholder="Search US city or ZIP (e.g. Bryan, TX or 77801)" autocomplete="off" spellcheck="false">
                     <button type="submit" id="btn-search">FIND</button>
                 </form>
                 <button class="geobtn" id="geoloc" type="button" title="Detect location via GPS">
@@ -41,16 +41,19 @@
                 </button>
             </div>
 
-            <!-- Header Controls & Consulting -->
+            <!-- Header Controls: Light/Dark Theme, Unit Switcher, Consulting -->
             <div class="d-flex align-items-center gap-2">
+                <button class="btn-theme-toggle" id="theme-toggle-btn" title="Toggle Light / Dark Theme">
+                    <i class="bi bi-sun-fill text-warning"></i> Light
+                </button>
                 <button class="btn-unit-toggle" id="unit-toggle-btn" title="Toggle °F / °C">°F</button>
-                <a href="mailto:oscarvegamail1@gmail.com" class="consulting-pill" title="Inquire for Meteorological Consulting & Data Solutions">
+                <a href="mailto:oscarvegamail1@gmail.com" class="consulting-pill" title="Inquire for Meteorological Consulting & Atmospheric Analysis">
                     <i class="bi bi-envelope-fill text-warning"></i> Consulting
                 </a>
             </div>
         </header>
     </div>
-    <!-- Highway Yellow Accent Strip -->
+    <!-- Accent Line -->
     <div class="fcyellow"></div>
 
     <!-- Breadcrumb & Quick Jump Strip -->
@@ -63,7 +66,7 @@
         </div>
     </div>
 
-    <!-- Sticky Section Navigation (weather.city .secnav) -->
+    <!-- Sticky Section Navigation -->
     <div class="secnav-wrapper">
         <div class="wrap">
             <nav class="secnav">
@@ -78,7 +81,7 @@
         </div>
     </div>
 
-    <!-- Main Civic Weather Dashboard Content -->
+    <!-- Main Meteorological Content -->
     <main class="wrap mt-4">
 
         <!-- Active Severe Weather Alerts Banner (Conditional) -->
@@ -89,7 +92,7 @@
         <!-- SECTION: CURRENT CONDITIONS -->
         <section id="current">
             <div class="card">
-                <!-- Highway Sign Cap -->
+                <!-- Texas A&M Maroon Top Cap -->
                 <div class="chead">
                     <div class="loc">
                         <span id="city-title-main">BRYAN · TEXAS</span>
@@ -150,7 +153,7 @@
             <div class="rule">
                 <h2><i class="bi bi-radar text-info"></i> Live WSR-88D Doppler Radar & Dual-Pol Suite</h2>
                 <span class="ln"></span>
-                <span class="sub">REAL-TIME BASE REFLECTIVITY & VELOCITY TILE FEEDS</span>
+                <span class="sub">REAL-TIME BASE REFLECTIVITY & VELOCITY FEEDS</span>
             </div>
 
             <div class="card" id="radar-card">
@@ -165,16 +168,13 @@
                         </button>
                     </div>
 
-                    <!-- Mode Switcher: NEXRAD / Loop / Windy -->
+                    <!-- Mode Switcher: NEXRAD & Loop -->
                     <div class="btn-group btn-group-sm" role="group" id="radar-mode-group">
                         <button type="button" class="btn btn-outline-info active" id="btn-mode-nexrad" onclick="setRadarMode('nexrad')">
                             <i class="bi bi-broadcast me-1"></i>NEXRAD
                         </button>
                         <button type="button" class="btn btn-outline-info" id="btn-mode-loop" onclick="setRadarMode('loop')">
-                            <i class="bi bi-play-circle me-1"></i>Loop
-                        </button>
-                        <button type="button" class="btn btn-outline-info" id="btn-mode-windy" onclick="setRadarMode('windy')">
-                            <i class="bi bi-lightning-charge me-1"></i>Windy
+                            <i class="bi bi-play-circle me-1"></i>2-Hr Loop
                         </button>
                     </div>
                 </div>
@@ -201,17 +201,10 @@
                     </a>
                 </div>
 
-                <!-- Map & Windy Viewers -->
+                <!-- Map Viewport -->
                 <div id="radar-map-wrapper" style="position: relative;">
                     <!-- Leaflet Radar Canvas -->
                     <div id="radar-map"></div>
-                    <!-- Windy Iframe Embed (Mode 'windy') -->
-                    <iframe id="windy-frame" 
-                            width="100%" 
-                            height="520" 
-                            style="display: none; border: none;"
-                            frameborder="0">
-                    </iframe>
                 </div>
 
                 <!-- Integrated Radar Control Bar -->
@@ -346,33 +339,130 @@
             </div>
         </section>
 
-        <!-- SECTION: OPERATIONAL NWP MODELS & CLIMATE / ENSO TRACKING -->
+        <!-- SECTION: NWP MODEL GUIDANCE SUITE & ENSO TRACKING -->
         <section id="models">
             <div class="rule">
-                <h2><i class="bi bi-cpu-fill text-info"></i> Numerical Weather Prediction (NWP) & ENSO Tracking</h2>
+                <h2><i class="bi bi-cpu-fill text-info"></i> NWP Model Guidance Suite & ENSO Tracking</h2>
                 <span class="ln"></span>
-                <span class="sub">GLOBAL ENSEMBLES & EQUATORIAL PACIFIC SST MONITORS</span>
+                <span class="sub">HIGH-RES CONVECTIVE, GLOBAL DYNAMICAL & AI NEURAL FORECAST SYSTEMS</span>
             </div>
 
+            <!-- Model Selection Bar -->
+            <div class="card p-3 mb-4">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2 pb-2 border-bottom border-white border-opacity-10">
+                    <div class="mono" style="font-size: 12px; font-weight: 800; color: var(--maroon-light);">
+                        SELECT NUMERICAL WEATHER PREDICTION MODEL (7 OPERATIONAL SYSTEMS):
+                    </div>
+                    <div class="mono text-muted" style="font-size: 11px;">
+                        CLICK TO INSPECT ARCHITECTURE & DATA FEEDS
+                    </div>
+                </div>
+
+                <div class="model-selector-bar" id="model-pills-container">
+                    <!-- Populated dynamically by app.js with GFS, AIGFS, HRRR, RRFS, ECMWF, AIFS, NBM -->
+                </div>
+
+                <!-- Spotlight Model Technical Dossier -->
+                <div id="model-spotlight-container" class="mt-3">
+                    <!-- Populated dynamically by selectNWPModel() -->
+                </div>
+
+                <!-- Interactive Guidance Run Generator -->
+                <div class="mt-3 p-3 rounded" style="background: var(--card-bg-sub); border: 1px solid var(--line);">
+                    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                            <span class="mono text-muted" style="font-size: 11px;">LAUNCH MODEL GUIDANCE:</span>
+                            
+                            <select id="nwp-launch-model" class="form-select form-select-sm bg-dark text-white border-secondary mono" style="width: auto; font-size: 0.82rem;">
+                                <option value="hrrr" selected>HRRR (3km Rapid Refresh)</option>
+                                <option value="rrfs" >RRFS (Next-Gen Convective)</option>
+                                <option value="gfs">GFS (Global 13km)</option>
+                                <option value="aigfs">AIGFS (NOAA GraphCast AI)</option>
+                                <option value="ecmwf_full">ECMWF (Euro IFS 9km)</option>
+                                <option value="aifs">AIFS (ECMWF Graph Neural AI)</option>
+                                <option value="nbm">NBM (National Blend)</option>
+                            </select>
+
+                            <select id="nwp-launch-param" class="form-select form-select-sm bg-dark text-white border-secondary mono" style="width: auto; font-size: 0.82rem;">
+                                <option value="ref" selected>Simulated Composite Radar</option>
+                                <option value="500h_avort">500mb Heights & Vorticity</option>
+                                <option value="2m_tmp">2m Surface Temperature</option>
+                                <option value="2m_tmp_anom">2m Temperature Anomaly</option>
+                                <option value="qpf_acc">Total QPF Liquid Accumulation</option>
+                                <option value="10m_wnd_gst">10m Surface Wind Gusts</option>
+                                <option value="sbcape">Surface-Based CAPE (Instability)</option>
+                            </select>
+
+                            <select id="nwp-launch-sector" class="form-select form-select-sm bg-dark text-white border-secondary mono" style="width: auto; font-size: 0.82rem;">
+                                <option value="tx" selected>Texas / Southern Plains</option>
+                                <option value="conus">CONUS (National)</option>
+                                <option value="sc">South Central US</option>
+                                <option value="global">Global Hemispheric</option>
+                            </select>
+                        </div>
+
+                        <button class="btn btn-sm btn-primary rounded-pill px-3 py-1 mono font-weight-bold" onclick="launchModelGuidance()" title="Open live interactive model guidance graphics">
+                            <i class="bi bi-box-arrow-up-right me-1"></i> Launch Guidance Run ↗
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Multi-Model Consensus Forecast Table -->
+            <div class="card p-3 mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom border-white border-opacity-10">
+                    <div>
+                        <h3 class="h6 mb-0 text-white font-weight-bold d-flex align-items-center gap-2">
+                            <i class="bi bi-table text-info"></i> Multi-Model Consensus Forecast Spread
+                        </h3>
+                        <div class="mono text-muted" style="font-size: 11px;">
+                            COMPARISON ACROSS OPERATIONAL PHYSICS & AI NEURAL ARCHITECTURES
+                        </div>
+                    </div>
+                    <span class="badge bg-dark border border-secondary text-info mono" style="font-size: 10px;">
+                        LIVE SPREAD CONSENSUS
+                    </span>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="model-compare-table">
+                        <thead>
+                            <tr>
+                                <th>MODEL SYSTEM</th>
+                                <th>RESOLUTION</th>
+                                <th>TODAY HIGH / LOW</th>
+                                <th>24H QPF PRECIP</th>
+                                <th>48H QPF PRECIP</th>
+                                <th>SYNOPTIC CONFIDENCE</th>
+                            </tr>
+                        </thead>
+                        <tbody id="model-consensus-table-body">
+                            <!-- Populated dynamically by app.js renderModelConsensusTable() -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Two Columns: Operational Links & ENSO Monitoring -->
             <div class="row g-4">
-                <!-- Left: NWP Model Suite & SPC / WPC Resources -->
+                <!-- Left: NWP Model Operational Hubs -->
                 <div class="col-lg-6">
                     <div class="card p-3 h-100">
                         <div class="d-flex align-items-center gap-2 mb-3 pb-2 border-bottom border-white border-opacity-10">
                             <i class="bi bi-grid-3x3-gap-fill text-info"></i>
-                            <h3 class="h6 mb-0 text-white font-weight-bold">Operational Meteorological Tools & Models</h3>
+                            <h3 class="h6 mb-0 text-white font-weight-bold">Operational Guidance Portals & Resources</h3>
                         </div>
                         <div class="list-group list-group-flush bg-transparent">
+                            <a href="https://hdwx.tamu.edu/product-list/" target="_blank" class="list-group-item list-group-item-action bg-transparent text-white border-secondary d-flex justify-content-between align-items-center px-0 py-2">
+                                <span><i class="bi bi-building text-danger me-2"></i>HDWX Texas A&M University Meteorology</span>
+                                <i class="bi bi-box-arrow-up-right text-muted" style="font-size: 0.8rem;"></i>
+                            </a>
                             <a href="https://www.tropicaltidbits.com/" target="_blank" class="list-group-item list-group-item-action bg-transparent text-white border-secondary d-flex justify-content-between align-items-center px-0 py-2">
                                 <span><i class="bi bi-tropical-storm text-warning me-2"></i>Tropical Tidbits (GFS, ECMWF, HWRF)</span>
                                 <i class="bi bi-box-arrow-up-right text-muted" style="font-size: 0.8rem;"></i>
                             </a>
                             <a href="https://www.pivotalweather.com/model.php" target="_blank" class="list-group-item list-group-item-action bg-transparent text-white border-secondary d-flex justify-content-between align-items-center px-0 py-2">
-                                <span><i class="bi bi-graph-up text-info me-2"></i>Pivotal Weather (HRRR, NAM, GEFS)</span>
-                                <i class="bi bi-box-arrow-up-right text-muted" style="font-size: 0.8rem;"></i>
-                            </a>
-                            <a href="https://hdwx.tamu.edu/product-list/" target="_blank" class="list-group-item list-group-item-action bg-transparent text-white border-secondary d-flex justify-content-between align-items-center px-0 py-2">
-                                <span><i class="bi bi-building text-danger me-2"></i>HDWX Texas A&M University Analysis</span>
+                                <span><i class="bi bi-graph-up text-info me-2"></i>Pivotal Weather (HRRR, RRFS, GEFS)</span>
                                 <i class="bi bi-box-arrow-up-right text-muted" style="font-size: 0.8rem;"></i>
                             </a>
                             <a href="https://weather.cod.edu/forecast/" target="_blank" class="list-group-item list-group-item-action bg-transparent text-white border-secondary d-flex justify-content-between align-items-center px-0 py-2">
@@ -428,7 +518,7 @@
         </div>
     </div>
 
-    <!-- Civic Meteorological Footer (weather.city .wc-foot style) -->
+    <!-- Civic Meteorological Footer -->
     <footer class="wc-foot">
         <div class="wrap">
             <div class="fbrand">
@@ -446,10 +536,13 @@
                 </div>
                 <div class="fcol">
                     <h4>NWP MODELS & SUITE</h4>
-                    <a href="https://www.tropicaltidbits.com/" target="_blank">Tropical Tidbits Models</a>
-                    <a href="https://www.pivotalweather.com/model.php" target="_blank">Pivotal Weather (HRRR / NAM)</a>
-                    <a href="https://hdwx.tamu.edu/product-list/" target="_blank">HDWX Texas A&M Meteorology</a>
-                    <a href="https://weather.cod.edu/forecast/" target="_blank">College of DuPage (COD) Analysis</a>
+                    <a href="#models" onclick="selectNWPModel('HRRR')">HRRR 3km Convective</a>
+                    <a href="#models" onclick="selectNWPModel('RRFS')">RRFS Next-Gen System</a>
+                    <a href="#models" onclick="selectNWPModel('GFS')">GFS Global 13km</a>
+                    <a href="#models" onclick="selectNWPModel('AIGFS')">AIGFS GraphCast Neural</a>
+                    <a href="#models" onclick="selectNWPModel('ECMWF')">ECMWF IFS 9km</a>
+                    <a href="#models" onclick="selectNWPModel('AIFS')">AIFS Graph Neural Network</a>
+                    <a href="#models" onclick="selectNWPModel('NBM')">NBM Calibrated Blend</a>
                 </div>
                 <div class="fcol">
                     <h4>FEDERAL DATA SOURCES</h4>
@@ -460,16 +553,16 @@
                 </div>
                 <div class="fcol">
                     <h4>CONSULTING & INQUIRIES</h4>
-                    <p style="font-size: 12px; color: #94a3b8; line-height: 1.6; margin-bottom: 8px;">
+                    <p style="font-size: 12px; color: var(--text-muted); line-height: 1.6; margin-bottom: 8px;">
                         Custom meteorological forecasting, Doppler radar analysis, and atmospheric data consulting:
                     </p>
-                    <a href="mailto:oscarvegamail1@gmail.com" style="color: var(--yellow); font-weight: 700;">
+                    <a href="mailto:oscarvegamail1@gmail.com" style="color: var(--maroon-light); font-weight: 700;">
                         <i class="bi bi-envelope-fill me-1"></i> oscarvegamail1@gmail.com
                     </a>
                 </div>
             </div>
             <div class="fbase">
-                <div>© VegaTex.Weather Dashboard · Meteorological Data in the Public Domain via NOAA & NWS NDFD</div>
+                <div>© VegaTex.Weather Platform · Meteorological Data via NOAA & NWS NDFD</div>
                 <div class="ms-auto">Built with Leaflet, Open-Meteo, & Iowa Environmental Mesonet (IEM)</div>
             </div>
         </div>
@@ -480,6 +573,6 @@
     <!-- Bootstrap 5 JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <!-- Core Application Engine -->
-    <script src="js/app.js?v=5.0"></script>
+    <script src="js/app.js?v=6.0"></script>
 </body>
 </html>

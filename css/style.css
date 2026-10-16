@@ -1,22 +1,18 @@
 /* ==========================================================================
-   VegaTex.Weather - Modern Civic Meteorological Design System
-   Inspired by Weather.city & Federal NWS Civic Sign Aesthetics
+   VegaTex.Weather - Operational Meteorological Platform
+   Featuring Texas A&M Maroon Identity, Dynamic Light/Dark Theme,
+   WSR-88D Doppler Suite, 48-Hr Thermal Meteogram, and Deep NWP Model Integration
    ========================================================================== */
 
 :root {
-  --sign: #04663d; /* Classic NWS / highway sign green */
-  --sign-dark: #02472a;
-  --sign-sub: #bdebcf;
-  --yellow: #ffd100; /* Highway guide yellow */
-  --bg-main: #0a0f1d;
-  --card-bg: #131c31;
-  --card-bg-sub: #18233c;
-  --card-border: rgba(255, 255, 255, 0.09);
-  --line: rgba(255, 255, 255, 0.08);
-  --line-light: rgba(255, 255, 255, 0.15);
-  --text-main: #f8fafc;
-  --text-secondary: #94a3b8;
-  --text-muted: #64748b;
+  /* Texas A&M Aggie Maroon Brand Palette */
+  --maroon: #500000;
+  --maroon-dark: #380000;
+  --maroon-light: #701111;
+  --maroon-sub: #f3d1d1;
+  --maroon-glow: rgba(80, 0, 0, 0.35);
+  --gold: #d4af37;
+  --silver: #e2e8f0;
   --blue: #38bdf8;
   --blue-dark: #0284c7;
   --amber: #f59e0b;
@@ -25,6 +21,44 @@
   --radius-lg: 12px;
   --radius-md: 8px;
   --radius-sm: 6px;
+}
+
+/* Dark Theme (Default) */
+:root, [data-theme="dark"] {
+  --bg-main: #0a0f1d;
+  --card-bg: #12192c;
+  --card-bg-sub: #17223b;
+  --card-border: rgba(255, 255, 255, 0.08);
+  --line: rgba(255, 255, 255, 0.08);
+  --line-light: rgba(255, 255, 255, 0.15);
+  --text-main: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --secnav-bg: rgba(10, 15, 29, 0.95);
+  --crumbbar-bg: #0d1424;
+  --input-bg: rgba(0, 0, 0, 0.45);
+  --afd-bg: #090e1a;
+  --table-hover: rgba(255, 255, 255, 0.03);
+  --shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+/* Light Theme */
+[data-theme="light"] {
+  --bg-main: #f1f5f9;
+  --card-bg: #ffffff;
+  --card-bg-sub: #f8fafc;
+  --card-border: rgba(0, 0, 0, 0.08);
+  --line: rgba(0, 0, 0, 0.07);
+  --line-light: rgba(0, 0, 0, 0.12);
+  --text-main: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+  --secnav-bg: rgba(241, 245, 249, 0.95);
+  --crumbbar-bg: #e2e8f0;
+  --input-bg: rgba(255, 255, 255, 0.22);
+  --afd-bg: #f8fafc;
+  --table-hover: rgba(0, 0, 0, 0.02);
+  --shadow: 0 4px 18px rgba(0, 0, 0, 0.06);
 }
 
 * {
@@ -40,27 +74,33 @@ body {
   padding: 0;
   scroll-behavior: smooth;
   -webkit-font-smoothing: antialiased;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 .mono {
   font-family: 'Overpass Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
 }
 
+.condensed {
+  font-family: 'Barlow Condensed', sans-serif !important;
+}
+
 .wrap {
-  max-width: 1240px;
+  max-width: 1260px;
   margin: 0 auto;
   padding: 0 16px;
 }
 
 /* ==========================================================================
-   Highway / Civic Header (weather.city style)
+   Texas A&M Maroon Meteorological Header
    ========================================================================== */
 
 .fchwrap {
-  background: var(--sign);
-  border-bottom: 1px solid var(--sign-dark);
+  background: linear-gradient(135deg, var(--maroon) 0%, var(--maroon-dark) 100%);
+  border-bottom: 1px solid var(--maroon-dark);
   position: relative;
   z-index: 1000;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
 }
 
 .fch {
@@ -75,7 +115,7 @@ body {
 .fcbrand {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   text-decoration: none;
   font-weight: 900;
   font-size: 1.45rem;
@@ -89,16 +129,16 @@ body {
 }
 
 .fcbrand .w2 {
-  color: var(--yellow);
+  color: var(--silver);
   font-weight: 800;
 }
 
 .fcbrand .wbadge {
   font-family: 'Overpass Mono', monospace;
   font-size: 10px;
-  background: rgba(0, 0, 0, 0.35);
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  color: var(--sign-sub);
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: var(--maroon-sub);
   padding: 2px 7px;
   border-radius: 4px;
   letter-spacing: 0.08em;
@@ -123,7 +163,7 @@ body {
 .ramp input {
   width: 100%;
   height: 40px;
-  background: rgba(0, 0, 0, 0.4);
+  background: var(--input-bg);
   border: 1.5px solid rgba(255, 255, 255, 0.25);
   border-radius: 20px 0 0 20px;
   padding: 0 16px;
@@ -135,19 +175,19 @@ body {
 }
 
 .ramp input:focus {
-  background: rgba(0, 0, 0, 0.7);
-  border-color: var(--yellow);
-  box-shadow: 0 0 0 2px rgba(255, 209, 0, 0.3);
+  background: rgba(0, 0, 0, 0.6);
+  border-color: #fff;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3);
 }
 
 .ramp input::placeholder {
-  color: rgba(255, 255, 255, 0.6);
+  color: rgba(255, 255, 255, 0.7);
 }
 
 .ramp button {
   height: 40px;
-  background: var(--yellow);
-  color: #0b1120;
+  background: #fff;
+  color: var(--maroon-dark);
   border: none;
   border-radius: 0 20px 20px 0;
   padding: 0 18px;
@@ -159,7 +199,7 @@ body {
 }
 
 .ramp button:hover {
-  background: #ffe043;
+  background: var(--silver);
 }
 
 .geobtn {
@@ -180,19 +220,62 @@ body {
 }
 
 .geobtn:hover {
-  background: rgba(0, 0, 0, 0.6);
-  border-color: var(--yellow);
-  color: var(--yellow);
+  background: rgba(255, 255, 255, 0.15);
+  border-color: #fff;
+  color: #fff;
+}
+
+/* Theme Toggle Button (Light / Dark) */
+.btn-theme-toggle {
+  height: 38px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1.5px solid rgba(255, 255, 255, 0.25);
+  color: #fff;
+  font-family: 'Overpass Mono', monospace;
+  font-weight: 700;
+  font-size: 0.82rem;
+  border-radius: 20px;
+  padding: 0 12px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+}
+
+.btn-theme-toggle:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: #fff;
+}
+
+/* Unit Switcher Button (°F / °C) */
+.btn-unit-toggle {
+  height: 38px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1.5px solid rgba(255, 255, 255, 0.25);
+  color: #fff;
+  font-family: 'Overpass Mono', monospace;
+  font-weight: 800;
+  font-size: 0.85rem;
+  border-radius: 20px;
+  padding: 0 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-unit-toggle:hover {
+  background: #fff;
+  color: var(--maroon-dark);
 }
 
 .consulting-pill {
-  height: 40px;
+  height: 38px;
   background: rgba(255, 255, 255, 0.15);
-  border: 1.5px solid rgba(255, 255, 255, 0.3);
+  border: 1.5px solid rgba(255, 255, 255, 0.35);
   color: #fff;
   border-radius: 20px;
   padding: 0 14px;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   font-weight: 700;
   text-decoration: none;
   display: inline-flex;
@@ -204,19 +287,19 @@ body {
 
 .consulting-pill:hover {
   background: #fff;
-  color: var(--sign-dark);
+  color: var(--maroon-dark);
 }
 
-/* Highway Accent Divider */
+/* Accent Strip Below Header */
 .fcyellow {
-  height: 4px;
-  background: var(--yellow);
+  height: 3px;
+  background: linear-gradient(90deg, var(--maroon-light) 0%, var(--silver) 50%, var(--maroon-light) 100%);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 /* Breadcrumb Strip */
 .crumbbar {
-  background: #0f1629;
+  background: var(--crumbbar-bg);
   border-bottom: 1px solid var(--line);
   padding: 8px 0;
   font-size: 0.78rem;
@@ -231,31 +314,12 @@ body {
   color: var(--blue);
 }
 
-/* Unit Toggle Button */
-.btn-unit-toggle {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid var(--line-light);
-  color: var(--text-secondary);
-  font-family: 'Overpass Mono', monospace;
-  font-weight: 800;
-  font-size: 0.85rem;
-  border-radius: 6px;
-  padding: 3px 10px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.btn-unit-toggle:hover {
-  background: var(--blue);
-  color: #0b1120;
-}
-
 /* Quick city chips */
 .quick-chips-strip {
   display: flex;
   gap: 6px;
   overflow-x: auto;
-  padding: 8px 0;
+  padding: 4px 0;
   scrollbar-width: none;
 }
 
@@ -264,7 +328,7 @@ body {
 }
 
 .quick-chip {
-  background: rgba(255, 255, 255, 0.04);
+  background: rgba(128, 128, 128, 0.1);
   border: 1px solid var(--line);
   color: var(--text-secondary);
   border-radius: 6px;
@@ -277,24 +341,25 @@ body {
 }
 
 .quick-chip:hover, .quick-chip.active {
-  background: rgba(56, 189, 248, 0.15);
-  border-color: var(--blue);
+  background: var(--maroon);
+  border-color: var(--maroon-light);
   color: #fff;
 }
 
 /* ==========================================================================
-   Sticky Section Navigation Strip (weather.city .secnav)
+   Sticky Section Navigation Strip
    ========================================================================== */
 
 .secnav-wrapper {
   position: sticky;
   top: 0;
   z-index: 1010;
-  background: rgba(10, 15, 29, 0.96);
+  background: var(--secnav-bg);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--line);
   padding: 6px 0;
+  transition: background-color 0.2s ease;
 }
 
 .secnav {
@@ -310,14 +375,14 @@ body {
 
 .secnav a {
   flex: none;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(128, 128, 128, 0.08);
   border: 1px solid var(--line);
   border-radius: 6px;
-  padding: 5px 11px;
+  padding: 5px 12px;
   font-family: 'Overpass Mono', monospace;
-  font-size: 10.5px;
+  font-size: 11px;
   font-weight: 800;
-  letter-spacing: 0.07em;
+  letter-spacing: 0.06em;
   color: var(--text-secondary);
   text-decoration: none;
   transition: all 0.15s ease;
@@ -325,10 +390,10 @@ body {
 }
 
 .secnav a:hover, .secnav a.active {
-  background: var(--card-bg);
-  border-color: var(--blue);
-  color: var(--blue);
-  box-shadow: 0 0 10px rgba(56, 189, 248, 0.2);
+  background: var(--maroon);
+  border-color: var(--maroon-light);
+  color: #fff;
+  box-shadow: 0 0 10px var(--maroon-glow);
 }
 
 section[id] {
@@ -336,7 +401,7 @@ section[id] {
 }
 
 /* ==========================================================================
-   Civic Card System & Highway Headers (.chead, .loc, .src)
+   Card System & Texas A&M Maroon Headers (.chead, .loc, .src)
    ========================================================================== */
 
 .card {
@@ -344,21 +409,22 @@ section[id] {
   border: 1px solid var(--card-border);
   border-radius: var(--radius-lg);
   overflow: hidden;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  box-shadow: var(--shadow);
   margin-bottom: 22px;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
 }
 
-/* Highway Sign Top Cap */
+/* Maroon Top Cap */
 .chead {
-  background: var(--sign);
+  background: linear-gradient(135deg, var(--maroon) 0%, var(--maroon-dark) 100%);
   color: #fff;
-  padding: 12px 18px;
+  padding: 14px 20px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
   flex-wrap: wrap;
-  border-bottom: 2px solid var(--yellow);
+  border-bottom: 2px solid var(--maroon-light);
 }
 
 .chead .loc {
@@ -374,7 +440,7 @@ section[id] {
   font-weight: 700;
   font-size: 11.5px;
   letter-spacing: 0.08em;
-  color: var(--sign-sub);
+  color: var(--maroon-sub);
   margin-top: 2px;
 }
 
@@ -383,7 +449,7 @@ section[id] {
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.06em;
-  color: var(--sign-sub);
+  color: var(--maroon-sub);
   text-align: right;
 }
 
@@ -408,7 +474,7 @@ section[id] {
 
 .rule h2 {
   margin: 0;
-  color: #fff;
+  color: var(--text-main);
   font-size: 14px;
   font-weight: 900;
   text-transform: uppercase;
@@ -416,7 +482,7 @@ section[id] {
   white-space: nowrap;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
 }
 
 .rule .sub {
@@ -449,8 +515,8 @@ section[id] {
   height: 76px;
   border-radius: 12px;
   flex: none;
-  background: rgba(255, 255, 255, 0.05);
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+  background: rgba(128, 128, 128, 0.1);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
 }
 
 .cc .temp {
@@ -458,7 +524,7 @@ section[id] {
   font-size: 72px;
   line-height: 0.85;
   letter-spacing: -0.04em;
-  color: #fff;
+  color: var(--text-main);
 }
 
 .cc .temp .u {
@@ -471,7 +537,7 @@ section[id] {
 .cc .desc {
   font-weight: 800;
   font-size: 21px;
-  color: #fff;
+  color: var(--text-main);
   margin-top: 6px;
 }
 
@@ -483,7 +549,7 @@ section[id] {
 }
 
 .cc .feels b {
-  color: #fff;
+  color: var(--text-main);
 }
 
 .ccgrid {
@@ -514,7 +580,7 @@ section[id] {
   font-family: 'Overpass', sans-serif;
   font-size: 19px;
   font-weight: 800;
-  color: #fff;
+  color: var(--text-main);
   margin-top: 3px;
   display: flex;
   align-items: baseline;
@@ -534,7 +600,7 @@ section[id] {
 .barrow {
   padding: 14px 18px 16px;
   border-top: 1px solid var(--line);
-  background: rgba(15, 23, 42, 0.4);
+  background: var(--card-bg-sub);
 }
 
 .brhd {
@@ -551,7 +617,7 @@ section[id] {
 }
 
 .brhd b {
-  color: #fff;
+  color: var(--text-main);
 }
 
 .brhd .fchilo {
@@ -570,12 +636,12 @@ section[id] {
 }
 
 .hbwrap::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.04);
+  background: rgba(128, 128, 128, 0.05);
   border-radius: 9999px;
 }
 
 .hbwrap::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(128, 128, 128, 0.25);
   border-radius: 9999px;
 }
 
@@ -602,7 +668,7 @@ section[id] {
   font-size: 15px;
   font-weight: 800;
   line-height: 1;
-  color: #fff;
+  color: var(--text-main);
   margin-bottom: 6px;
 }
 
@@ -611,7 +677,7 @@ section[id] {
   max-width: 32px;
   border-radius: 6px 6px 3px 3px;
   min-height: 6px;
-  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.4), 0 2px 8px rgba(0, 0, 0, 0.3);
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.3), 0 2px 8px rgba(0, 0, 0, 0.15);
   transition: height 0.3s ease;
 }
 
@@ -688,7 +754,7 @@ section[id] {
   font-family: 'Overpass Mono', monospace;
   font-size: 11.5px;
   font-weight: 700;
-  color: #fff;
+  color: var(--text-main);
   margin-top: 4px;
 }
 
@@ -698,7 +764,7 @@ section[id] {
   flex-wrap: wrap;
   gap: 8px;
   padding: 12px 18px;
-  background: rgba(15, 23, 42, 0.6);
+  background: var(--card-bg);
 }
 
 .oddsrow .olbl {
@@ -714,7 +780,7 @@ section[id] {
   display: inline-flex;
   align-items: baseline;
   gap: 6px;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--card-bg-sub);
   border: 1px solid var(--line);
   border-radius: 6px;
   padding: 5px 11px;
@@ -729,13 +795,6 @@ section[id] {
   font-size: 11px;
   font-weight: 800;
   color: var(--blue);
-}
-
-.oddsrow .oc i {
-  font-style: normal;
-  font-weight: 900;
-  font-size: 14px;
-  color: #fff;
 }
 
 /* ==========================================================================
@@ -756,13 +815,14 @@ section[id] {
 }
 
 .daily-row:hover {
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--table-hover);
 }
 
 .daily-day {
   font-weight: 800;
   font-size: 1rem;
   min-width: 130px;
+  color: var(--text-main);
 }
 
 .daily-day small {
@@ -808,7 +868,7 @@ section[id] {
 .temp-bar-bg {
   flex: 1;
   height: 6px;
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--line-light);
   border-radius: 9999px;
   position: relative;
   overflow: hidden;
@@ -824,14 +884,14 @@ section[id] {
 
 .temp-high {
   font-family: 'Overpass Mono', monospace;
-  color: #fff;
+  color: var(--text-main);
   font-weight: 900;
   font-size: 1rem;
   min-width: 36px;
 }
 
 /* ==========================================================================
-   Radar Section & Controls
+   Doppler Radar Section & Controls (No Windy)
    ========================================================================== */
 
 #radar-map {
@@ -840,15 +900,9 @@ section[id] {
   background: #0f172a;
 }
 
-#windy-frame {
-  width: 100%;
-  height: 520px;
-  border: none;
-}
-
 .radar-controls-panel {
-  background: rgba(15, 23, 42, 0.8);
-  padding: 10px 16px;
+  background: var(--card-bg-sub);
+  padding: 12px 18px;
   border-top: 1px solid var(--line);
 }
 
@@ -857,18 +911,19 @@ section[id] {
   height: 36px;
   border-radius: 50%;
   border: none;
-  background: var(--blue);
-  color: #0b1120;
+  background: var(--maroon);
+  color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 1rem;
   cursor: pointer;
-  transition: transform 0.15s ease;
+  transition: transform 0.15s ease, background 0.15s ease;
 }
 
 .radar-play-btn:hover {
   transform: scale(1.08);
+  background: var(--maroon-light);
 }
 
 .radar-slider {
@@ -876,7 +931,7 @@ section[id] {
   width: 100%;
   height: 6px;
   border-radius: 9999px;
-  background: rgba(255, 255, 255, 0.15);
+  background: var(--line-light);
   outline: none;
   cursor: pointer;
 }
@@ -886,8 +941,9 @@ section[id] {
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: var(--blue);
+  background: var(--maroon);
   cursor: pointer;
+  box-shadow: 0 0 6px var(--maroon-glow);
 }
 
 .radar-legend {
@@ -906,7 +962,7 @@ section[id] {
   background: linear-gradient(90deg, #00ffff 0%, #00ff00 25%, #ffff00 50%, #ff0000 75%, #ff00ff 100%);
 }
 
-/* Fullscreen Radar */
+/* Fullscreen Radar View */
 .radar-fullscreen {
   position: fixed !important;
   top: 0 !important;
@@ -922,7 +978,7 @@ section[id] {
   padding: 12px 18px !important;
   display: flex !important;
   flex-direction: column !important;
-  background: #0b1120 !important;
+  background: var(--bg-main) !important;
   overflow: hidden !important;
 }
 
@@ -933,8 +989,7 @@ section[id] {
   display: flex;
 }
 
-.radar-fullscreen #radar-map,
-.radar-fullscreen #windy-frame {
+.radar-fullscreen #radar-map {
   height: 100% !important;
   width: 100% !important;
   min-height: 100% !important;
@@ -949,7 +1004,7 @@ section[id] {
   border-left: 5px solid;
   background: rgba(244, 63, 94, 0.12);
   border-color: var(--rose);
-  color: #fff;
+  color: var(--text-main);
   padding: 1rem 1.25rem;
   margin-bottom: 1.25rem;
 }
@@ -986,29 +1041,121 @@ section[id] {
    ========================================================================== */
 
 .afd-box {
-  background: #090e1a;
+  background: var(--afd-bg);
   border: 1px solid var(--line);
   border-radius: var(--radius-md);
   padding: 16px;
   font-family: 'Overpass Mono', monospace;
   font-size: 12px;
   line-height: 1.6;
-  color: #cbd5e1;
+  color: var(--text-secondary);
   white-space: pre-wrap;
   max-height: 440px;
   overflow-y: auto;
 }
 
 /* ==========================================================================
-   Civic Footer (.wc-foot style)
+   NWP Model Guidance Suite Styling (GFS, AIGFS, HRRR, RRFS, ECMWF, AIFS, NBM)
+   ========================================================================== */
+
+.model-selector-bar {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding: 6px 0;
+  scrollbar-width: none;
+}
+
+.model-selector-bar::-webkit-scrollbar {
+  display: none;
+}
+
+.model-pill {
+  flex: none;
+  background: var(--card-bg-sub);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-family: 'Overpass Mono', monospace;
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.model-pill:hover, .model-pill.active {
+  background: var(--maroon);
+  border-color: var(--maroon-light);
+  color: #fff;
+  box-shadow: 0 0 8px var(--maroon-glow);
+}
+
+.model-pill .badge-tag {
+  font-size: 9px;
+  padding: 1px 4px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.18);
+  font-weight: 700;
+}
+
+.model-compare-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.model-compare-table th {
+  background: var(--card-bg-sub);
+  color: var(--text-muted);
+  font-family: 'Overpass Mono', monospace;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+}
+
+.model-compare-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--line);
+  color: var(--text-main);
+  vertical-align: middle;
+}
+
+.model-compare-table tr:hover td {
+  background: var(--table-hover);
+}
+
+.model-card-item {
+  background: var(--card-bg-sub);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  padding: 14px;
+  height: 100%;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.model-card-item:hover {
+  transform: translateY(-2px);
+  border-color: var(--maroon);
+}
+
+/* ==========================================================================
+   Civic Meteorological Footer
    ========================================================================== */
 
 .wc-foot {
-  background: #080c18;
-  color: #cfccc4;
-  border-top: 4px solid var(--sign);
+  background: var(--card-bg);
+  color: var(--text-secondary);
+  border-top: 4px solid var(--maroon);
   margin-top: 48px;
-  padding: 32px 0 24px;
+  padding: 36px 0 24px;
+  transition: background-color 0.2s ease;
 }
 
 .wc-foot .fbrand {
@@ -1018,18 +1165,18 @@ section[id] {
   flex-wrap: wrap;
   gap: 8px 16px;
   padding-bottom: 14px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  margin-bottom: 18px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 20px;
 }
 
 .wc-foot .fbrand b {
   font-weight: 900;
   font-size: 20px;
-  color: #fff;
+  color: var(--text-main);
 }
 
 .wc-foot .fbrand b span {
-  color: var(--sign-sub);
+  color: var(--maroon-light);
 }
 
 .wc-foot .fbrand i {
@@ -1049,16 +1196,20 @@ section[id] {
 
 .wc-foot .fcol h4 {
   margin: 0 0 8px;
-  font-size: 10.5px;
+  font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.12em;
-  color: var(--sign-sub);
+  color: var(--maroon-light);
   text-transform: uppercase;
+}
+
+[data-theme="dark"] .wc-foot .fcol h4 {
+  color: var(--maroon-sub);
 }
 
 .wc-foot .fcol a {
   display: block;
-  color: #94a3b8;
+  color: var(--text-secondary);
   text-decoration: none;
   font-size: 12.5px;
   font-weight: 600;
@@ -1067,13 +1218,13 @@ section[id] {
 }
 
 .wc-foot .fcol a:hover {
-  color: #fff;
+  color: var(--text-main);
 }
 
 .wc-foot .fbase {
-  margin-top: 20px;
+  margin-top: 24px;
   padding-top: 14px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 1px solid var(--line);
   display: flex;
   flex-wrap: wrap;
   gap: 6px 14px;
@@ -1101,7 +1252,7 @@ section[id] {
   .pxtiles {
     grid-template-columns: 1fr;
   }
-  #radar-map, #windy-frame {
+  #radar-map {
     height: 380px;
   }
 }
