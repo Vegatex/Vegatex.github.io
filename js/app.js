@@ -179,6 +179,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initUnitToggle();
   initSearch();
   initRadarControls();
+  initRadarMap();
   renderNWPModelSuite();
 
   // Load initial weather for Bryan, TX
@@ -803,11 +804,11 @@ async function initRadarMap() {
   // Base Map Layer (Switches dynamically between Dark and Light Canvas)
   const isDark = state.theme === 'dark';
   const baseTileUrl = isDark 
-    ? 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{x}/{y}'
-    : 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{x}/{y}';
+    ? 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}'
+    : 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}';
   const refTileUrl = isDark
-    ? 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{x}/{y}'
-    : 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{x}/{y}';
+    ? 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}'
+    : 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}';
 
   state.radar.baseLayer = L.tileLayer(baseTileUrl, {
     maxZoom: 16,
@@ -846,11 +847,11 @@ function updateRadarBasemap(theme) {
 
   const isDark = theme === 'dark';
   const baseTileUrl = isDark 
-    ? 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{x}/{y}'
-    : 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{x}/{y}';
+    ? 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}'
+    : 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}';
   const refTileUrl = isDark
-    ? 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{x}/{y}'
-    : 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{x}/{y}';
+    ? 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}'
+    : 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}';
 
   state.radar.baseLayer.setUrl(baseTileUrl);
   state.radar.refLayer.setUrl(refTileUrl);
@@ -875,14 +876,19 @@ function updateRadarMarker(lat, lon) {
 function updateRadarMapLocation(lat, lon) {
   if (!state.radar.map) {
     initRadarMap();
-    return;
   }
-  state.radar.map.flyTo([lat, lon], 8, { duration: 1.2 });
-  updateRadarMarker(lat, lon);
-  setTimeout(() => {
-    if (state.radar.map) state.radar.map.invalidateSize();
-  }, 300);
+  if (state.radar.map) {
+    state.radar.map.setView([lat, lon], 8);
+    updateRadarMarker(lat, lon);
+    setTimeout(() => {
+      if (state.radar.map) state.radar.map.invalidateSize();
+    }, 250);
+  }
 }
+
+window.addEventListener('resize', () => {
+  if (state.radar.map) state.radar.map.invalidateSize();
+});
 
 // Mode Switcher: 'nexrad' or 'loop'
 async function setRadarMode(mode) {
