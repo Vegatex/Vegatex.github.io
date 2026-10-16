@@ -18,7 +18,7 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     
     <!-- Custom Texas A&M Maroon Design System & Light/Dark Theme -->
-    <link rel="stylesheet" href="css/style.css?v=9.0">
+    <link rel="stylesheet" href="css/style.css?v=9.2">
 </head>
 <body>
 
@@ -382,6 +382,34 @@
                     <!-- Populated dynamically by app.js -->
                 </div>
 
+                <!-- Model Interactive Timeline & Scrubber Controller (Always Visible Above Map) -->
+                <div class="model-timeline-bar" id="model-timeline-bar">
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <button class="model-step-btn" id="model-step-back-btn" onclick="stepModelForecast(-1)" title="Step Back 1 Hour (←)">
+                            <i class="bi bi-skip-backward-fill"></i>
+                        </button>
+                        <button class="model-play-btn" id="model-play-btn" onclick="toggleModelLoop()" title="Play / Pause Forecast Loop (Space)">
+                            <i class="bi bi-play-fill" id="model-play-icon"></i>
+                        </button>
+                        <button class="model-step-btn" id="model-step-fwd-btn" onclick="stepModelForecast(1)" title="Step Forward 1 Hour (→)">
+                            <i class="bi bi-skip-forward-fill"></i>
+                        </button>
+
+                        <div class="d-flex align-items-center gap-2 px-1">
+                            <input type="range" class="form-range model-time-slider" id="model-timeline-slider" min="0" max="18" step="1" value="0" oninput="onModelSliderInput(this.value)">
+                        </div>
+
+                        <span class="badge rounded-pill px-3 py-1 mono" id="model-valid-timestamp" style="background: var(--card-bg); border: 1px solid var(--line); color: var(--text-main); font-size: 11px;">
+                            F+00H · LATEST NCEP RUN · VALID NOW
+                        </span>
+                    </div>
+
+                    <div class="d-flex align-items-center gap-2 mono" style="font-size: 11px; color: var(--text-muted);">
+                        <span><i class="bi bi-broadcast text-success me-1"></i> IN-HOUSE NCEP / IEM STREAM</span>
+                        <span class="d-none d-md-inline">· CLICK MAP TO PROBE</span>
+                    </div>
+                </div>
+
                 <!-- In-House Interactive Model Viewport Map Screen -->
                 <div class="model-viewport-screen" id="model-viewport-screen">
                     <div id="model-leaflet-map"></div>
@@ -398,34 +426,6 @@
                         <div class="legend-labels mono">
                             <span>5</span><span>15</span><span>25</span><span>35</span><span>45</span><span>55</span><span>65+</span>
                         </div>
-                    </div>
-                </div>
-
-                <!-- Model Interactive Timeline & Scrubber Controller -->
-                <div class="model-timeline-bar" id="model-timeline-bar">
-                    <div class="d-flex align-items-center gap-2">
-                        <button class="model-step-btn" onclick="stepModelForecast(-1)" title="Step Back 1 Hour (←)">
-                            <i class="bi bi-skip-backward-fill"></i>
-                        </button>
-                        <button class="model-step-btn play-btn" id="model-play-btn" onclick="toggleModelLoop()" title="Play / Pause Forecast Loop (Space)">
-                            <i class="bi bi-play-fill" id="model-play-icon"></i>
-                        </button>
-                        <button class="model-step-btn" onclick="stepModelForecast(1)" title="Step Forward 1 Hour (→)">
-                            <i class="bi bi-skip-forward-fill"></i>
-                        </button>
-
-                        <div class="d-flex align-items-center gap-2 px-2">
-                            <input type="range" class="form-range model-time-slider" id="model-timeline-slider" min="0" max="18" step="1" value="0" oninput="onModelSliderInput(this.value)">
-                        </div>
-
-                        <span class="badge rounded-pill px-3 py-1 mono" id="model-valid-timestamp" style="background: var(--card-bg); border: 1px solid var(--line); color: var(--text-main); font-size: 11px;">
-                            F+00H · LATEST NCEP RUN · VALID NOW
-                        </span>
-                    </div>
-
-                    <div class="d-flex align-items-center gap-2 mono" style="font-size: 11px; color: var(--text-muted);">
-                        <span><i class="bi bi-broadcast text-success me-1"></i> IN-HOUSE NCEP / IEM STREAM</span>
-                        <span class="d-none d-md-inline">· CLICK MAP TO PROBE</span>
                     </div>
                 </div>
 
@@ -598,6 +598,6 @@
     <!-- Bootstrap 5 JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <!-- Core Application Engine -->
-    <script src="js/app.js?v=9.0"></script>
+    <script src="js/app.js?v=9.2"></script>
 </body>
 </html>

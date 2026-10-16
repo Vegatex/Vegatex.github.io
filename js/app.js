@@ -75,9 +75,11 @@ const QUICK_CITIES = [
 const NWP_MODELS = {
   'HRRR': {
     name: 'HRRR (High-Resolution Rapid Refresh)',
-    tag: '3km Convective',
+    tag: 'CAM 3km',
     domain: 'conus',
     defaultField: 'refc',
+    supportedParams: ['refc', 'refcptype', 'tmp', 'wind', 'cape', 'qpf', 'sat', 'meteogram', 'sounding'],
+    maxFhr: 18,
     org: 'NOAA / NCEP & ESRL',
     type: 'Operational Convection-Allowing Benchmark',
     res: '3 km CONUS grid',
@@ -90,10 +92,12 @@ const NWP_MODELS = {
     tag: 'Next-Gen 3km',
     domain: 'conus',
     defaultField: 'refc',
+    supportedParams: ['refc', 'refcptype', 'tmp', 'wind', 'cape', 'qpf', 'sat', 'meteogram', 'sounding'],
+    maxFhr: 24,
     org: 'NOAA / NWS / EMC',
     type: 'Next-Gen FV3-Based Convection-Allowing Model',
     res: '3 km CONUS grid',
-    cycle: 'Hourly / 6-Hourly Cycles',
+    cycle: 'Hourly / 6-Hourly Cycles to F24',
     summary: 'NOAA\'s next-generation high-resolution atmospheric prediction system using the Finite-Volume Cubed-Sphere (FV3) dynamical core to replace RAP & HRRR with unified convective-scale guidance.',
     strengths: 'Convective storm initiation, discrete supercell evolution, updraft helicity, boundary layer transitions, and advanced microphysics.'
   },
@@ -101,7 +105,9 @@ const NWP_MODELS = {
     name: 'GFS (Global Forecast System)',
     tag: 'Global 13km',
     domain: 'conus',
-    defaultField: 'refc',
+    defaultField: 'tmp',
+    supportedParams: ['tmp', 'wind', 'cape', 'qpf', 'sat', 'meteogram', 'sounding'],
+    maxFhr: 72,
     org: 'NOAA / National Weather Service',
     type: 'Global Numerical Spectral / FV3 Core',
     res: '13 km native Gaussian grid',
@@ -114,6 +120,8 @@ const NWP_MODELS = {
     tag: 'NWS Blend 2.5km',
     domain: 'conus',
     defaultField: 'tmp',
+    supportedParams: ['tmp', 'wind', 'qpf', 'meteogram'],
+    maxFhr: 36,
     org: 'NOAA / NWS Office of Science & Technology',
     type: 'Statistically Calibrated Multi-Model Super-Ensemble',
     res: '2.5 km CONUS grid',
@@ -125,7 +133,9 @@ const NWP_MODELS = {
     name: 'ECMWF IFS (European Centre 9km)',
     tag: 'Euro 9km',
     domain: 'global',
-    defaultField: 'meteogram',
+    defaultField: 'tmp',
+    supportedParams: ['tmp', 'wind', 'cape', 'qpf', 'sat', 'meteogram', 'sounding'],
+    maxFhr: 72,
     org: 'European Centre for Medium-Range Weather Forecasts',
     type: 'Global High-Resolution 4D-Var Physics Benchmark',
     res: '9 km global grid',
@@ -137,7 +147,9 @@ const NWP_MODELS = {
     name: 'AIFS (ECMWF Artificial Intelligence)',
     tag: 'AI GNN 28km',
     domain: 'global',
-    defaultField: 'meteogram',
+    defaultField: 'tmp',
+    supportedParams: ['tmp', 'wind', 'meteogram'],
+    maxFhr: 72,
     org: 'European Centre for Medium-Range Weather Forecasts',
     type: 'Data-Driven Graph Neural Network (AI)',
     res: '0.25° (~28 km) Global',
@@ -149,7 +161,9 @@ const NWP_MODELS = {
     name: 'AIGFS (NOAA / DeepMind GraphCast)',
     tag: 'AI Neural 25km',
     domain: 'global',
-    defaultField: 'meteogram',
+    defaultField: 'tmp',
+    supportedParams: ['tmp', 'wind', 'meteogram'],
+    maxFhr: 72,
     org: 'NOAA NCEP & Google DeepMind',
     type: 'Deep Learning / GraphCast Neural Core',
     res: '0.25° (~25 km) Global Grid',
@@ -161,7 +175,9 @@ const NWP_MODELS = {
     name: 'GraphCast (DeepMind / NOAA AI)',
     tag: '0.25° AI Model',
     domain: 'global',
-    defaultField: 'meteogram',
+    defaultField: 'tmp',
+    supportedParams: ['tmp', 'wind', 'meteogram'],
+    maxFhr: 72,
     org: 'Google DeepMind & NOAA NCEP',
     type: 'Deep Learning / Graph Neural Network (GNN)',
     res: '0.25° (~25 km) Global Grid',
@@ -1156,26 +1172,42 @@ let probedDataCache = null;
 
 // Reference meteorological stations across Texas and CONUS for high-res model spatial grids
 const MODEL_REFERENCE_STATIONS = [
-  { id: 'BCS', name: 'Bryan / C.S.', lat: 30.6744, lon: -96.3700, baseTemp: 78, baseWind: 10, windDeg: 160, baseCape: 1450 },
-  { id: 'IAH', name: 'Houston', lat: 29.9844, lon: -95.3414, baseTemp: 80, baseWind: 12, windDeg: 150, baseCape: 1850 },
-  { id: 'AUS', name: 'Austin', lat: 30.1945, lon: -97.6699, baseTemp: 79, baseWind: 11, windDeg: 170, baseCape: 1600 },
-  { id: 'DFW', name: 'Dallas-FW', lat: 32.8998, lon: -97.0403, baseTemp: 76, baseWind: 14, windDeg: 180, baseCape: 1250 },
-  { id: 'SAT', name: 'San Antonio', lat: 29.5337, lon: -98.4698, baseTemp: 81, baseWind: 9, windDeg: 160, baseCape: 1550 },
-  { id: 'CRP', name: 'Corpus Christi', lat: 27.7704, lon: -97.5012, baseTemp: 82, baseWind: 16, windDeg: 140, baseCape: 2100 },
-  { id: 'LBB', name: 'Lubbock', lat: 33.6636, lon: -101.8228, baseTemp: 72, baseWind: 18, windDeg: 210, baseCape: 850 },
-  { id: 'AMA', name: 'Amarillo', lat: 35.2194, lon: -101.7059, baseTemp: 68, baseWind: 20, windDeg: 220, baseCape: 600 },
-  { id: 'ELP', name: 'El Paso', lat: 31.8072, lon: -106.3778, baseTemp: 74, baseWind: 12, windDeg: 260, baseCape: 250 },
-  { id: 'MAF', name: 'Midland', lat: 31.9425, lon: -102.2019, baseTemp: 75, baseWind: 15, windDeg: 200, baseCape: 750 },
-  { id: 'OKC', name: 'Oklahoma City', lat: 35.3931, lon: -97.6007, baseTemp: 71, baseWind: 16, windDeg: 190, baseCape: 1100 },
-  { id: 'MSY', name: 'New Orleans', lat: 29.9934, lon: -90.2580, baseTemp: 81, baseWind: 11, windDeg: 130, baseCape: 1950 },
-  { id: 'DEN', name: 'Denver', lat: 39.8561, lon: -104.6737, baseTemp: 62, baseWind: 13, windDeg: 310, baseCape: 400 },
-  { id: 'ORD', name: 'Chicago', lat: 41.9742, lon: -87.9073, baseTemp: 60, baseWind: 15, windDeg: 40, baseCape: 300 },
-  { id: 'ATL', name: 'Atlanta', lat: 33.6407, lon: -84.4277, baseTemp: 73, baseWind: 9, windDeg: 90, baseCape: 900 },
-  { id: 'MIA', name: 'Miami', lat: 25.7959, lon: -80.2870, baseTemp: 85, baseWind: 14, windDeg: 100, baseCape: 2400 },
-  { id: 'JFK', name: 'New York', lat: 40.6413, lon: -73.7781, baseTemp: 64, baseWind: 12, windDeg: 70, baseCape: 200 },
-  { id: 'SEA', name: 'Seattle', lat: 47.4502, lon: -122.3088, baseTemp: 56, baseWind: 8, windDeg: 220, baseCape: 50 },
-  { id: 'PHX', name: 'Phoenix', lat: 33.4352, lon: -112.0101, baseTemp: 88, baseWind: 7, windDeg: 250, baseCape: 150 },
-  { id: 'LAX', name: 'Los Angeles', lat: 33.9416, lon: -118.4085, baseTemp: 70, baseWind: 9, windDeg: 260, baseCape: 100 }
+  // National Hubs (Priority 1: visible at all zoom levels)
+  { id: 'DFW', name: 'Dallas-FW', lat: 32.8998, lon: -97.0403, baseTemp: 76, baseWind: 14, windDeg: 180, baseCape: 1250, prio: 1 },
+  { id: 'IAH', name: 'Houston', lat: 29.9844, lon: -95.3414, baseTemp: 80, baseWind: 12, windDeg: 150, baseCape: 1850, prio: 1 },
+  { id: 'SAT', name: 'San Antonio', lat: 29.5337, lon: -98.4698, baseTemp: 81, baseWind: 9, windDeg: 160, baseCape: 1550, prio: 1 },
+  { id: 'OKC', name: 'Oklahoma City', lat: 35.3931, lon: -97.6007, baseTemp: 71, baseWind: 16, windDeg: 190, baseCape: 1100, prio: 1 },
+  { id: 'MSY', name: 'New Orleans', lat: 29.9934, lon: -90.2580, baseTemp: 81, baseWind: 11, windDeg: 130, baseCape: 1950, prio: 1 },
+  { id: 'DEN', name: 'Denver', lat: 39.8561, lon: -104.6737, baseTemp: 62, baseWind: 13, windDeg: 310, baseCape: 400, prio: 1 },
+  { id: 'ORD', name: 'Chicago', lat: 41.9742, lon: -87.9073, baseTemp: 60, baseWind: 15, windDeg: 40, baseCape: 300, prio: 1 },
+  { id: 'ATL', name: 'Atlanta', lat: 33.6407, lon: -84.4277, baseTemp: 73, baseWind: 9, windDeg: 90, baseCape: 900, prio: 1 },
+  { id: 'MIA', name: 'Miami', lat: 25.7959, lon: -80.2870, baseTemp: 85, baseWind: 14, windDeg: 100, baseCape: 2400, prio: 1 },
+  { id: 'JFK', name: 'New York', lat: 40.6413, lon: -73.7781, baseTemp: 64, baseWind: 12, windDeg: 70, baseCape: 200, prio: 1 },
+  { id: 'SEA', name: 'Seattle', lat: 47.4502, lon: -122.3088, baseTemp: 56, baseWind: 8, windDeg: 220, baseCape: 50, prio: 1 },
+  { id: 'PHX', name: 'Phoenix', lat: 33.4352, lon: -112.0101, baseTemp: 88, baseWind: 7, windDeg: 250, baseCape: 150, prio: 1 },
+  { id: 'LAX', name: 'Los Angeles', lat: 33.9416, lon: -118.4085, baseTemp: 70, baseWind: 9, windDeg: 260, baseCape: 100, prio: 1 },
+  { id: 'SFO', name: 'San Francisco', lat: 37.6213, lon: -122.3790, baseTemp: 65, baseWind: 14, windDeg: 280, baseCape: 80, prio: 1 },
+  { id: 'SLC', name: 'Salt Lake City', lat: 40.7899, lon: -111.9791, baseTemp: 61, baseWind: 10, windDeg: 320, baseCape: 250, prio: 1 },
+  { id: 'MSP', name: 'Minneapolis', lat: 44.8848, lon: -93.2223, baseTemp: 57, baseWind: 14, windDeg: 350, baseCape: 350, prio: 1 },
+  { id: 'STL', name: 'St. Louis', lat: 38.7499, lon: -90.3748, baseTemp: 66, baseWind: 11, windDeg: 160, baseCape: 650, prio: 1 },
+  { id: 'MCI', name: 'Kansas City', lat: 39.2976, lon: -94.7139, baseTemp: 65, baseWind: 12, windDeg: 170, baseCape: 750, prio: 1 },
+  { id: 'CLT', name: 'Charlotte', lat: 35.2140, lon: -80.9431, baseTemp: 71, baseWind: 8, windDeg: 110, baseCape: 800, prio: 1 },
+  { id: 'BNA', name: 'Nashville', lat: 36.1245, lon: -86.6782, baseTemp: 69, baseWind: 9, windDeg: 140, baseCape: 700, prio: 1 },
+  { id: 'BOS', name: 'Boston', lat: 42.3656, lon: -71.0096, baseTemp: 61, baseWind: 13, windDeg: 60, baseCape: 150, prio: 1 },
+  { id: 'DCA', name: 'Washington DC', lat: 38.8512, lon: -77.0402, baseTemp: 67, baseWind: 10, windDeg: 80, baseCape: 400, prio: 1 },
+
+  // Regional Texas Stations (Priority 2: rendered at Texas zoom >= 6 to avoid label clutter at CONUS view)
+  { id: 'BCS', name: 'Bryan / C.S.', lat: 30.6744, lon: -96.3700, baseTemp: 78, baseWind: 10, windDeg: 160, baseCape: 1450, prio: 2 },
+  { id: 'AUS', name: 'Austin', lat: 30.1945, lon: -97.6699, baseTemp: 79, baseWind: 11, windDeg: 170, baseCape: 1600, prio: 2 },
+  { id: 'CRP', name: 'Corpus Christi', lat: 27.7704, lon: -97.5012, baseTemp: 82, baseWind: 16, windDeg: 140, baseCape: 2100, prio: 2 },
+  { id: 'LBB', name: 'Lubbock', lat: 33.6636, lon: -101.8228, baseTemp: 72, baseWind: 18, windDeg: 210, baseCape: 850, prio: 2 },
+  { id: 'AMA', name: 'Amarillo', lat: 35.2194, lon: -101.7059, baseTemp: 68, baseWind: 20, windDeg: 220, baseCape: 600, prio: 2 },
+  { id: 'ELP', name: 'El Paso', lat: 31.8072, lon: -106.3778, baseTemp: 74, baseWind: 12, windDeg: 260, baseCape: 250, prio: 2 },
+  { id: 'MAF', name: 'Midland', lat: 31.9425, lon: -102.2019, baseTemp: 75, baseWind: 15, windDeg: 200, baseCape: 750, prio: 2 },
+  { id: 'ACT', name: 'Waco', lat: 31.6113, lon: -97.2305, baseTemp: 77, baseWind: 12, windDeg: 170, baseCape: 1350, prio: 2 },
+  { id: 'TYR', name: 'Tyler', lat: 32.3541, lon: -95.4024, baseTemp: 76, baseWind: 9, windDeg: 160, baseCape: 1500, prio: 2 },
+  { id: 'BPT', name: 'Beaumont', lat: 29.9508, lon: -94.0207, baseTemp: 81, baseWind: 11, windDeg: 140, baseCape: 1900, prio: 2 },
+  { id: 'LRD', name: 'Laredo', lat: 27.5438, lon: -99.4616, baseTemp: 85, baseWind: 13, windDeg: 150, baseCape: 1750, prio: 2 }
 ];
 
 async function fetchCityModelData(lat, lon) {
@@ -1220,7 +1252,7 @@ function initModelMap() {
     attributionControl: false
   });
 
-  // Base map layer
+  // Base map layer using clean ESRI Cartography (NO API Key required, NO watermark)
   updateModelBasemap(state.theme);
 
   // Initial Tile Layer or Scalar Field
@@ -1230,21 +1262,46 @@ function initModelMap() {
   state.modelStudio.map.on('click', (e) => {
     probeModelCoordinate(e.latlng.lat, e.latlng.lng);
   });
+
+  // Adaptive zoom listener for scalar stations
+  state.modelStudio.map.on('zoomend', () => {
+    const p = state.modelStudio.param;
+    if (p === 'tmp' || p === 'wind' || p === 'cape') {
+      renderModelScalarMarkers(p, state.modelStudio.model, state.modelStudio.forecastHour);
+    }
+  });
 }
 
 function updateModelBasemap(theme) {
   if (!state.modelStudio.map) return;
   if (state.modelStudio.baseLayer) {
     state.modelStudio.map.removeLayer(state.modelStudio.baseLayer);
+    state.modelStudio.baseLayer = null;
+  }
+  if (state.modelStudio.refLayer) {
+    state.modelStudio.map.removeLayer(state.modelStudio.refLayer);
+    state.modelStudio.refLayer = null;
   }
 
-  const tileUrl = theme === 'dark'
-    ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
-    : 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
+  const isDark = theme === 'dark';
+  const baseTileUrl = isDark
+    ? 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}'
+    : 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}';
 
-  state.modelStudio.baseLayer = L.tileLayer(tileUrl, {
-    subdomains: 'abcd',
-    maxZoom: 19
+  const refTileUrl = isDark
+    ? 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}'
+    : 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}';
+
+  state.modelStudio.baseLayer = L.tileLayer(baseTileUrl, {
+    maxZoom: 16,
+    zIndex: 1,
+    attribution: '&copy; Esri, DeLorme, NAVTEQ'
+  }).addTo(state.modelStudio.map);
+
+  state.modelStudio.refLayer = L.tileLayer(refTileUrl, {
+    maxZoom: 16,
+    zIndex: 50,
+    opacity: 0.85
   }).addTo(state.modelStudio.map);
 
   if (state.modelStudio.tileLayer) {
@@ -1259,6 +1316,12 @@ function renderModelScalarMarkers(param, modelKey, fhr) {
     state.modelStudio.map.removeLayer(state.modelStudio.scalarLayer);
     state.modelStudio.scalarLayer = null;
   }
+
+  const currentZoom = state.modelStudio.map.getZoom();
+  const visibleStations = MODEL_REFERENCE_STATIONS.filter(st => {
+    if (st.prio === 1) return true;
+    return currentZoom >= 6;
+  });
 
   const markers = [];
   const modelOffsets = {
@@ -1278,7 +1341,7 @@ function renderModelScalarMarkers(param, modelKey, fhr) {
   const diurnalCape = Math.max(0, Math.sin((fhr - 5) * Math.PI / 12)) * 650;
   const windFluct = Math.cos(fhr * 0.35) * 3;
 
-  MODEL_REFERENCE_STATIONS.forEach(st => {
+  visibleStations.forEach(st => {
     let badgeHtml = '';
 
     if (param === 'tmp') {
@@ -1326,6 +1389,87 @@ function renderModelScalarMarkers(param, modelKey, fhr) {
   state.modelStudio.scalarLayer = L.layerGroup(markers).addTo(state.modelStudio.map);
 }
 
+function renderRRFSConvectiveLayer(fhr, isPtype) {
+  if (!state.modelStudio.map) return;
+  if (state.modelStudio.rrfsLayer) {
+    state.modelStudio.map.removeLayer(state.modelStudio.rrfsLayer);
+    state.modelStudio.rrfsLayer = null;
+  }
+
+  const items = [];
+
+  // Seeded convective storm genesis centers in Texas and Southern Plains
+  const stormSeeds = [
+    { baseLat: 33.2, baseLon: -99.8, intensity: 58, spread: 45000 },
+    { baseLat: 31.8, baseLon: -98.5, intensity: 52, spread: 35000 },
+    { baseLat: 30.2, baseLon: -96.8, intensity: 48, spread: 38000 },
+    { baseLat: 34.5, baseLon: -97.8, intensity: 62, spread: 50000 },
+    { baseLat: 29.5, baseLon: -95.1, intensity: 42, spread: 30000 },
+    { baseLat: 36.2, baseLon: -100.5, intensity: 54, spread: 42000 },
+    { baseLat: 32.5, baseLon: -95.0, intensity: 46, spread: 32000 }
+  ];
+
+  // Advection vector: storms track east-northeast at ~25 kts
+  const dLat = (fhr * 0.10);
+  const dLon = (fhr * 0.25);
+  const diurnalStrength = Math.max(0.35, Math.sin((fhr + 2) * Math.PI / 12) * 1.25);
+
+  stormSeeds.forEach((s, idx) => {
+    const lat = s.baseLat + dLat + Math.sin(fhr * 0.4 + idx) * 0.08;
+    const lon = s.baseLon + dLon;
+    const dbz = Math.round(s.intensity * diurnalStrength);
+    if (dbz < 20) return;
+
+    let outerColor = '#10b981'; // Green (light rain)
+    let coreColor = '#ca8a04';  // Yellow
+    let severeColor = '#dc2626'; // Red
+    if (isPtype) {
+      if (lat > 37.0) {
+        outerColor = '#60a5fa'; // Blue (snow)
+        coreColor = '#3b82f6';
+        severeColor = '#1d4ed8';
+      } else if (lat > 35.0 && dbz > 45) {
+        outerColor = '#f59e0b'; // Mix / Sleet
+        coreColor = '#ea580c';
+        severeColor = '#e11d48';
+      }
+    }
+
+    // Outer echo shield (20-35 dBZ)
+    items.push(L.circle([lat, lon], {
+      radius: s.spread * (0.8 + diurnalStrength * 0.4),
+      color: outerColor,
+      weight: 1,
+      fillColor: outerColor,
+      fillOpacity: 0.42
+    }));
+
+    // Mid convective core (35-50 dBZ)
+    if (dbz >= 35) {
+      items.push(L.circle([lat + 0.04, lon + 0.04], {
+        radius: s.spread * 0.55,
+        color: coreColor,
+        weight: 1,
+        fillColor: coreColor,
+        fillOpacity: 0.65
+      }));
+    }
+
+    // Severe core / hail spike (50+ dBZ)
+    if (dbz >= 50) {
+      items.push(L.circle([lat + 0.06, lon + 0.05], {
+        radius: s.spread * 0.28,
+        color: severeColor,
+        weight: 1.5,
+        fillColor: severeColor,
+        fillOpacity: 0.85
+      }));
+    }
+  });
+
+  state.modelStudio.rrfsLayer = L.layerGroup(items).addTo(state.modelStudio.map);
+}
+
 function updateModelTileLayer() {
   if (!state.modelStudio.map) return;
 
@@ -1346,6 +1490,12 @@ function updateModelTileLayer() {
     state.modelStudio.scalarLayer = null;
   }
 
+  // Remove RRFS layer if present
+  if (state.modelStudio.rrfsLayer) {
+    state.modelStudio.map.removeLayer(state.modelStudio.rrfsLayer);
+    state.modelStudio.rrfsLayer = null;
+  }
+
   const legend = document.getElementById("model-radar-legend");
 
   if (param === 'refc') {
@@ -1359,12 +1509,16 @@ function updateModelTileLayer() {
         </div>
       `;
     }
-    const url = `https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/hrrr::REFD-${fmin}-0/{z}/{x}/{y}.png`;
-    state.modelStudio.tileLayer = L.tileLayer(url, {
-      opacity: 0.85,
-      maxZoom: 12,
-      zIndex: 10
-    }).addTo(state.modelStudio.map);
+    if (modelKey === 'RRFS') {
+      renderRRFSConvectiveLayer(fhr, false);
+    } else {
+      const url = `https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/hrrr::REFD-${fmin}-0/{z}/{x}/{y}.png`;
+      state.modelStudio.tileLayer = L.tileLayer(url, {
+        opacity: 0.85,
+        maxZoom: 12,
+        zIndex: 10
+      }).addTo(state.modelStudio.map);
+    }
 
   } else if (param === 'refcptype') {
     if (legend) {
@@ -1377,12 +1531,16 @@ function updateModelTileLayer() {
         </div>
       `;
     }
-    const url = `https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/hrrr::REFP-${fmin}-0/{z}/{x}/{y}.png`;
-    state.modelStudio.tileLayer = L.tileLayer(url, {
-      opacity: 0.85,
-      maxZoom: 12,
-      zIndex: 10
-    }).addTo(state.modelStudio.map);
+    if (modelKey === 'RRFS') {
+      renderRRFSConvectiveLayer(fhr, true);
+    } else {
+      const url = `https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/hrrr::REFP-${fmin}-0/{z}/{x}/{y}.png`;
+      state.modelStudio.tileLayer = L.tileLayer(url, {
+        opacity: 0.85,
+        maxZoom: 12,
+        zIndex: 10
+      }).addTo(state.modelStudio.map);
+    }
 
   } else if (param === 'qpf') {
     if (legend) {
@@ -1473,11 +1631,35 @@ function updateModelTileLayer() {
 function selectNWPModel(modelKey) {
   if (!NWP_MODELS[modelKey]) return;
   state.modelStudio.model = modelKey;
+  const m = NWP_MODELS[modelKey];
+
+  // If current parameter is not supported by this model, switch to its defaultField
+  if (m.supportedParams && !m.supportedParams.includes(state.modelStudio.param)) {
+    state.modelStudio.param = m.defaultField || 'tmp';
+  }
+
+  // Adjust timeline slider range according to model's forecast horizon
+  const maxHour = m.maxFhr || 18;
+  const slider = document.getElementById("model-timeline-slider");
+  if (slider) {
+    slider.max = maxHour;
+    if (state.modelStudio.forecastHour > maxHour) {
+      state.modelStudio.forecastHour = 0;
+      slider.value = 0;
+    }
+  }
+
   renderNWPModelStudio();
 }
 window.selectNWPModel = selectNWPModel;
 
 function selectNWPParam(paramId) {
+  const currentModelKey = state.modelStudio.model || 'HRRR';
+  const m = NWP_MODELS[currentModelKey] || NWP_MODELS['HRRR'];
+  if (m.supportedParams && !m.supportedParams.includes(paramId)) {
+    // If param not supported by current model, switch to HRRR
+    state.modelStudio.model = 'HRRR';
+  }
   state.modelStudio.param = paramId;
   renderNWPModelStudio();
 }
@@ -1512,13 +1694,21 @@ function setForecastHour(hour) {
     const sndContainer = document.getElementById("model-sounding-container");
     if (sndContainer) renderInHouseSounding(sndContainer);
   }
+
+  // If point probe is active, refresh the card
+  if (state.modelStudio.probedCoords) {
+    displayProbedPointValues(state.modelStudio.probedCoords.lat, state.modelStudio.probedCoords.lng);
+  }
 }
 window.setForecastHour = setForecastHour;
 
 function stepModelForecast(delta) {
+  const modelKey = state.modelStudio.model || 'HRRR';
+  const m = NWP_MODELS[modelKey] || NWP_MODELS['HRRR'];
+  const maxFhr = m.maxFhr || 18;
   let next = (state.modelStudio.forecastHour || 0) + delta;
-  if (next > 18) next = 0;
-  if (next < 0) next = 18;
+  if (next > maxFhr) next = 0;
+  if (next < 0) next = maxFhr;
   setForecastHour(next);
 }
 window.stepModelForecast = stepModelForecast;
@@ -1530,6 +1720,7 @@ window.onModelSliderInput = onModelSliderInput;
 
 function toggleModelLoop() {
   const icon = document.getElementById("model-play-icon");
+  const btn = document.getElementById("model-play-btn");
 
   if (state.modelStudio.isPlaying) {
     clearInterval(state.modelStudio.intervalId);
@@ -1537,14 +1728,20 @@ function toggleModelLoop() {
     if (icon) {
       icon.className = "bi bi-play-fill";
     }
+    if (btn) {
+      btn.classList.remove("active");
+    }
   } else {
     state.modelStudio.isPlaying = true;
     if (icon) {
       icon.className = "bi bi-pause-fill";
     }
+    if (btn) {
+      btn.classList.add("active");
+    }
     state.modelStudio.intervalId = setInterval(() => {
       stepModelForecast(1);
-    }, 700);
+    }, 850);
   }
 }
 window.toggleModelLoop = toggleModelLoop;
@@ -1758,6 +1955,15 @@ function renderNWPModelStudio() {
   if (paramContainer) {
     paramContainer.innerHTML = MODEL_STUDIO_PARAMS.map(p => {
       const isActive = p.id === currentParamId;
+      const isSupported = !modelInfo.supportedParams || modelInfo.supportedParams.includes(p.id);
+      if (!isSupported) {
+        return `
+          <button class="model-param-btn disabled" disabled title="Not applicable to ${currentModelKey} (available in CAMs like HRRR & RRFS)">
+            <i class="bi ${p.icon}"></i>
+            <span>${p.name}</span>
+          </button>
+        `;
+      }
       return `
         <button class="model-param-btn ${isActive ? 'active' : ''}" onclick="selectNWPParam('${p.id}')">
           <i class="bi ${p.icon}"></i>
@@ -1773,8 +1979,8 @@ function renderNWPModelStudio() {
   if (statusHeadline) {
     statusHeadline.innerHTML = `
       <span class="pulse-indicator"></span>
-      <span class="mono" style="font-weight: 800; color: var(--maroon-light);">${currentModelKey} CONUS</span>
-      <span class="mono text-muted d-none d-sm-inline">· ${pName.toUpperCase()} · ${modelInfo.res.toUpperCase()}</span>
+      <span class="mono" style="font-weight: 800; color: var(--maroon-light);">${currentModelKey} ${modelInfo.domain === 'global' ? 'GLOBAL' : 'CONUS'}</span>
+      <span class="mono text-muted d-none d-sm-inline">· ${pName.toUpperCase()} · ${modelInfo.res.toUpperCase()} · ${modelInfo.type.toUpperCase()}</span>
     `;
   }
 
@@ -2170,19 +2376,25 @@ function renderModelConsensusTable() {
     { model: 'AIGFS', full: 'NOAA AI GFS / GraphCast', res: '25km', high: gfsHigh, low: gfsLow, qpf24: gfsQpf24, qpf48: gfsQpf48, conf: 'High (AI Neural Core)' }
   ];
 
-  container.innerHTML = rows.map(r => `
-    <tr>
-      <td>
-        <strong style="color: var(--maroon-light);">${r.model}</strong>
-        <div class="mono text-muted" style="font-size: 10.5px;">${r.full}</div>
-      </td>
-      <td class="mono">${r.res}</td>
-      <td class="mono"><strong>${formatTemp(r.high)}°</strong> / ${formatTemp(r.low)}°</td>
-      <td class="mono">${r.qpf24}</td>
-      <td class="mono">${r.qpf48}</td>
-      <td class="mono"><span class="badge ${r.conf.includes('Very') ? 'bg-success' : 'bg-info'} text-white">${r.conf}</span></td>
-    </tr>
-  `).join("");
+  const selectedModel = state.modelStudio.model || 'HRRR';
+
+  container.innerHTML = rows.map(r => {
+    const isSelected = r.model === selectedModel;
+    return `
+      <tr class="${isSelected ? 'active-model-row' : ''}">
+        <td>
+          <strong style="color: var(--maroon-light);">${r.model}</strong>
+          ${isSelected ? '<span class="badge bg-danger ms-1 mono" style="font-size:9px;">ACTIVE</span>' : ''}
+          <div class="mono text-muted" style="font-size: 10.5px;">${r.full}</div>
+        </td>
+        <td class="mono">${r.res}</td>
+        <td class="mono"><strong>${formatTemp(r.high)}°</strong> / ${formatTemp(r.low)}°</td>
+        <td class="mono">${r.qpf24}</td>
+        <td class="mono">${r.qpf48}</td>
+        <td class="mono"><span class="badge ${r.conf.includes('Very') ? 'bg-success' : 'bg-info'} text-white">${r.conf}</span></td>
+      </tr>
+    `;
+  }).join("");
 }
 
 /* ==========================================================================
