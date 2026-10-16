@@ -20,12 +20,10 @@ const state = {
   stationInfo: null,
   afdText: null,
   modelStudio: {
-    model: 'HRRR',
-    param: '500mb',
-    leadHour: 24,
-    sector: 'tx',
-    isPlaying: false,
-    intervalId: null
+    model: 'RRFS',
+    param: 'refc',
+    domain: 'conus',
+    fullscreen: false
   },
   modelConsensusData: null,
   radar: {
@@ -64,95 +62,132 @@ const QUICK_CITIES = [
   { name: "Seattle", query: "Seattle, WA" }
 ];
 
-// NWP Model Specifications & Dossier
+// NWP Model Specifications & Forecast Eagle Explorer Routing
 const NWP_MODELS = {
-  'HRRR': {
-    name: 'HRRR (High-Resolution Rapid Refresh)',
-    tag: '3km Convective',
-    org: 'NOAA / NCEP & ESRL',
-    type: 'Convection-Allowing High-Resolution (Physics-Based)',
-    res: '3 km grid spacing',
-    cycle: 'Hourly (1h updates)',
-    leadTime: '18–48 Hours',
-    summary: 'The operational benchmark for short-term severe convection, supercells, squall lines, downburst winds, tornado environment analysis, and flash flood precipitation in the contiguous US.',
-    strengths: 'Convective storm initiation, simulated composite radar reflectivity, 10m wind gusts, storm-scale rotation (updraft helicity), and localized flash flooding.'
-  },
   'RRFS': {
     name: 'RRFS (Rapid Refresh Forecast System)',
     tag: 'Next-Gen 3km',
+    fePath: 'rrfs',
+    domain: 'conus',
+    defaultField: 'refc',
     org: 'NOAA / NWS / EMC',
-    type: 'Next-Gen FV3-Based Convective Ensemble',
+    type: 'Next-Gen FV3-Based Convection-Allowing Model',
     res: '3 km CONUS grid',
-    cycle: 'Hourly / 6-Hourly Cycles',
-    leadTime: '60 Hours',
-    summary: 'NOAA\'s next-generation high-resolution atmospheric prediction system using the Finite-Volume Cubed-Sphere (FV3) dynamical core to replace RAP & HRRR with unified convective-scale ensemble guidance.',
-    strengths: 'Advanced cloud microphysics, improved storm-scale thermodynamics, boundary layer transition, and ensemble probability of severe hail/wind.'
+    cycle: 'Hourly (15-min steps to 18h / hourly to 60h)',
+    summary: 'NOAA\'s next-generation high-resolution atmospheric prediction system using the Finite-Volume Cubed-Sphere (FV3) dynamical core to replace RAP & HRRR with unified convective-scale guidance.',
+    strengths: 'Convective storm initiation, discrete supercell evolution, updraft helicity, boundary layer transitions, and advanced microphysics.',
+    supportsFields: ['refc', 'tmp', 'wind', 'cape', 'precip', 'refcptype', 'meteogram', 'sounding']
+  },
+  'HRRR': {
+    name: 'HRRR (High-Resolution Rapid Refresh)',
+    tag: '3km Operational',
+    fePath: 'hrrr',
+    domain: 'conus',
+    defaultField: 'refc',
+    org: 'NOAA / NCEP & ESRL',
+    type: 'Operational Convection-Allowing Benchmark',
+    res: '3 km CONUS grid',
+    cycle: 'Hourly (15-min steps to 18h, hourly to 48h)',
+    summary: 'The operational benchmark for short-term severe convection, supercells, squall lines, downburst winds, tornado environment analysis, and flash flood precipitation in the contiguous US.',
+    strengths: 'Simulated composite radar reflectivity, 10m wind gusts, storm-scale rotation, cold pool dynamics, and localized flash flooding.',
+    supportsFields: ['refc', 'tmp', 'wind', 'cape', 'precip', 'refcptype', 'meteogram', 'sounding']
   },
   'GFS': {
     name: 'GFS (Global Forecast System)',
     tag: 'Global 13km',
+    fePath: 'gfs',
+    domain: 'conus',
+    defaultField: 'refc',
     org: 'NOAA / National Weather Service',
     type: 'Global Numerical Spectral / FV3 Core',
-    res: '13 km global grid',
-    cycle: '4x Daily (00z, 06z, 12z, 18z)',
-    leadTime: '384 Hours (16 Days)',
+    res: '13 km native Gaussian grid',
+    cycle: '4x Daily (00z, 06z, 12z, 18z) to F384',
     summary: 'NOAA\'s flagship operational numerical model predicting synoptic planetary wave patterns, high/low pressure centers, cold fronts, winter storms, and Atlantic/Pacific tropical cyclones.',
-    strengths: '500mb Rossby wave dynamics, continental airmass transitions, Arctic cold air outbreaks, synoptic precipitation shields, and tropical cyclogenesis.'
-  },
-  'AIGFS': {
-    name: 'AIGFS (NOAA AI GFS / GraphCast Neural)',
-    tag: 'AI Deep Learning',
-    org: 'NOAA / NCEP & DeepMind GraphCast',
-    type: 'Deep Learning / Graph Neural Network (GNN)',
-    res: '0.25° (~25 km) Global',
-    cycle: '4x Daily (00z, 06z, 12z, 18z)',
-    leadTime: '240 Hours (10 Days)',
-    summary: 'NOAA\'s cutting-edge artificial intelligence model trained on 40 years of ERA5 reanalysis data. Produces 10-day global forecasts in seconds with revolutionary track accuracy for cyclones and jet positions.',
-    strengths: 'Minimal track errors on tropical cyclones, mid-latitude synoptic trough timing, computational speed, and reduced geopotential height bias.'
-  },
-  'ECMWF': {
-    name: 'ECMWF IFS (Integrated Forecasting System)',
-    tag: 'Euro 9km',
-    org: 'European Centre for Medium-Range Weather Forecasts',
-    type: 'Global High-Resolution Physics-Based',
-    res: '9 km global grid',
-    cycle: '2x–4x Daily (00z, 06z, 12z, 18z)',
-    leadTime: '240 Hours (10 Days)',
-    summary: 'Widely recognized as the international gold standard in numerical weather prediction. Employs 4D-Var data assimilation ingesting hundreds of millions of satellite, radar, and radiosonde soundings.',
-    strengths: 'Highest verification scores globally on 500mb anomaly correlation, precise storm track trajectory, precipitation distribution, and upper-level jet streaks.'
-  },
-  'AIFS': {
-    name: 'AIFS (ECMWF Artificial Intelligence)',
-    tag: 'AI GNN 15-Day',
-    org: 'European Centre for Medium-Range Weather Forecasts',
-    type: 'Data-Driven Graph Neural Network (AI)',
-    res: '0.25° (~28 km) Global',
-    cycle: '2x Daily (00z, 12z)',
-    leadTime: '360 Hours (15 Days)',
-    summary: 'ECMWF\'s revolutionary operational data-driven model using advanced Graph Neural Networks. Consistently beats traditional numerical physics models on 500mb geopotential height verification.',
-    strengths: 'Exceptional medium-range synoptic skill (Days 4–10), sharp temperature anomaly boundaries, low computational footprint, and high-confidence atmospheric wave pattern recognition.'
+    strengths: '500mb Rossby wave dynamics, continental airmass transitions, Arctic cold air outbreaks, synoptic precipitation shields, and tropical cyclogenesis.',
+    supportsFields: ['refc', 'tmp', 'wind', 'cape', 'precip', 'meteogram', 'sounding']
   },
   'NBM': {
     name: 'NBM (National Blend of Models)',
-    tag: 'NWS Calibrated Blend',
+    tag: 'NWS Blend 2.5km',
+    fePath: 'nbm',
+    domain: 'conus',
+    defaultField: 'tmp',
     org: 'NOAA / NWS Office of Science & Technology',
     type: 'Statistically Calibrated Multi-Model Super-Ensemble',
     res: '2.5 km CONUS grid',
-    cycle: 'Hourly updates',
-    leadTime: '264 Hours (11 Days)',
+    cycle: 'Hourly updates to Day 11 (264h)',
     summary: 'The operational foundation of official NWS forecasts. Statistically blends and post-processes the GFS, ECMWF, HRRR, Canadian GDPS, and ensemble members calibrated against real-world observations.',
-    strengths: 'Optimal calibrated point temperatures, calibrated precipitation probabilities (PoP), wind gust statistics, snow-to-liquid ratios, and reduced individual model bias.'
+    strengths: 'Optimal calibrated point temperatures, calibrated precipitation probabilities (PoP), wind gust statistics, snow-to-liquid ratios, and reduced individual model bias.',
+    supportsFields: ['tmp', 'wind', 'precip', 'meteogram', 'sounding']
+  },
+  'REFS': {
+    name: 'REFS (RRFS Convective Ensemble)',
+    tag: '3km Ensemble',
+    fePath: 'refs',
+    domain: 'conus',
+    defaultField: '',
+    org: 'NOAA / EMC',
+    type: 'Next-Gen Convective Ensemble Probabilities',
+    res: '3 km CONUS grid',
+    cycle: '4x Daily (00z, 06z, 12z, 18z)',
+    summary: 'The RRFS ensemble — neighbourhood probabilities of severe storms, updraft rotation, lightning, heavy rain and severe wind gusts, plus the probability-matched mean and ensemble spread.',
+    strengths: 'Probabilistic severe weather forecasting, convective initiation uncertainty envelopes, and extreme rainfall hazard risk.',
+    supportsFields: ['meteogram', 'sounding']
+  },
+  'WN3': {
+    name: 'WeatherNext 3 (Google DeepMind AI)',
+    tag: '0.1° AI Model',
+    fePath: 'weathernext3',
+    domain: '',
+    defaultField: '',
+    org: 'Google DeepMind & NOAA',
+    type: 'Deep Learning / Graph Neural Network (GNN)',
+    res: '0.1° (~10 km) Global Grid',
+    cycle: 'Hourly to F048 · Ensemble Mean',
+    summary: 'Google\'s state-of-the-art WeatherNext 3 neural forecasting architecture trained on decades of reanalysis data. Produces fast, high-fidelity planetary atmospheric simulations in seconds.',
+    strengths: 'Rapid inference speed, high-skill synoptic geopotential height tracking, jet stream positioning, and reduced computational energy usage.',
+    supportsFields: ['meteogram', 'sounding']
+  },
+  'RTMA': {
+    name: 'RTMA (Real-Time Mesoscale Analysis)',
+    tag: '2.5km Analysis',
+    fePath: 'rtma',
+    domain: 'conus',
+    defaultField: 'tmp',
+    org: 'NOAA / NWS',
+    type: 'Observational Ground-Truth Analysis',
+    res: '2.5 km CONUS grid',
+    cycle: 'Hourly real-time surface analysis',
+    summary: 'Not a forecast, but NOAA\'s high-resolution record of what the surface weather actually was hour by hour. The definitive benchmark against which all model forecasts are verified.',
+    strengths: 'Observed surface truth, mesoscale fronts, localized terrain temperature pools, and post-event meteorological verification.',
+    supportsFields: ['tmp', 'wind', 'precip', 'meteogram', 'sounding']
+  },
+  'ECMWF': {
+    name: 'ECMWF IFS (European Centre 9km)',
+    tag: 'Euro 9km',
+    fePath: '',
+    domain: '',
+    defaultField: 'meteogram',
+    org: 'European Centre for Medium-Range Weather Forecasts',
+    type: 'Global High-Resolution 4D-Var Physics Benchmark',
+    res: '9 km global grid',
+    cycle: '2x–4x Daily to Day 10 (240h)',
+    summary: 'Widely recognized as the international gold standard in numerical weather prediction. Employs 4D-Var data assimilation ingesting hundreds of millions of satellite, radar, and radiosonde soundings.',
+    strengths: 'Highest verification scores globally on 500mb anomaly correlation, precise storm track trajectory, precipitation distribution, and upper-level jet streaks.',
+    supportsFields: ['meteogram', 'sounding']
   }
 };
 
-// In-House Model Studio Parameters (WeatherFront Style)
+// In-House Forecast Studio Parameters & Atmospheric Fields
 const MODEL_STUDIO_PARAMS = [
-  { id: '500mb', name: '500mb Heights & Vorticity', icon: 'bi-tropical-storm', type: 'image' },
-  { id: 'sfc', name: 'Surface Fronts & MSLP', icon: 'bi-cloud-haze2', type: 'image' },
-  { id: 'qpf', name: 'QPF Liquid Accumulation', icon: 'bi-cloud-rain-heavy', type: 'image' },
-  { id: 'spc', name: 'Severe Convective Risk (SPC)', icon: 'bi-lightning-charge', type: 'image' },
-  { id: 'meteogram', name: 'In-House Model Meteogram', icon: 'bi-graph-up', type: 'meteogram' },
-  { id: 'sounding', name: 'Model Sounding & Indices', icon: 'bi-activity', type: 'sounding' }
+  { id: 'refc', name: 'Simulated Radar (dBZ)', icon: 'bi-broadcast' },
+  { id: 'tmp', name: '2m Temperature (°F)', icon: 'bi-thermometer-half' },
+  { id: 'wind', name: '10m Wind & Barbs', icon: 'bi-wind' },
+  { id: 'cape', name: 'Surface CAPE (J/kg)', icon: 'bi-lightning-charge-fill' },
+  { id: 'precip', name: 'Total Precip (in)', icon: 'bi-cloud-rain-heavy-fill' },
+  { id: 'refcptype', name: 'Precip Type', icon: 'bi-cloud-snow-fill' },
+  { id: 'meteogram', name: 'Point Meteogram', icon: 'bi-graph-up' },
+  { id: 'sounding', name: 'Sounding Profile', icon: 'bi-activity' }
 ];
 
 // Initialize on DOM Ready
@@ -188,6 +223,16 @@ function applyTheme(theme) {
 
   // Update Leaflet radar basemap tiles if map is initialized
   updateRadarBasemap(theme);
+
+  // Propagate theme to Forecast Eagle interactive model explorer
+  const iframe = document.getElementById("model-explorer-frame");
+  if (iframe && iframe.src) {
+    try {
+      const u = new URL(iframe.src);
+      u.searchParams.set('theme', theme);
+      iframe.src = u.toString();
+    } catch (e) {}
+  }
 }
 
 function initThemeToggle() {
@@ -1116,12 +1161,20 @@ function initRadarControls() {
 }
 
 /* ==========================================================================
-   WeatherFront-Style In-House NWP Model Studio
+   Forecast Eagle Interactive NWP Model Studio & Guidance Workstation
    ========================================================================== */
 
 function selectNWPModel(modelKey) {
   if (!NWP_MODELS[modelKey]) return;
   state.modelStudio.model = modelKey;
+  const modelInfo = NWP_MODELS[modelKey];
+  
+  // If current param is not supported by model and is not meteogram/sounding, reset to default field
+  if (state.modelStudio.param !== 'meteogram' && state.modelStudio.param !== 'sounding') {
+    if (modelInfo.supportsFields && modelInfo.supportsFields.length > 0 && !modelInfo.supportsFields.includes(state.modelStudio.param)) {
+      state.modelStudio.param = modelInfo.defaultField || 'refc';
+    }
+  }
   renderNWPModelStudio();
 }
 window.selectNWPModel = selectNWPModel;
@@ -1132,27 +1185,56 @@ function selectNWPParam(paramId) {
 }
 window.selectNWPParam = selectNWPParam;
 
-function stepNWPLeadHour(delta) {
-  let newHour = state.modelStudio.leadHour + delta;
-  if (newHour < 0) newHour = 0;
-  if (newHour > 120) newHour = 120;
-  state.modelStudio.leadHour = newHour;
-  renderNWPModelStudio();
+function toggleModelFullscreen() {
+  const card = document.getElementById("model-studio-card");
+  if (!card) return;
+  card.classList.toggle("model-fullscreen");
+  const isFs = card.classList.contains("model-fullscreen");
+  state.modelStudio.fullscreen = isFs;
+
+  const btn = document.getElementById("model-fullscreen-btn");
+  if (btn) {
+    btn.innerHTML = isFs 
+      ? '<i class="bi bi-fullscreen-exit"></i> <span class="d-none d-sm-inline">Exit Theater</span>' 
+      : '<i class="bi bi-arrows-fullscreen"></i> <span class="d-none d-sm-inline">Theater Mode</span>';
+  }
 }
-window.stepNWPLeadHour = stepNWPLeadHour;
+window.toggleModelFullscreen = toggleModelFullscreen;
+
+function refreshModelStudio() {
+  const iframe = document.getElementById("model-explorer-frame");
+  if (iframe) {
+    const cur = iframe.src;
+    iframe.src = '';
+    setTimeout(() => { iframe.src = cur; }, 120);
+  } else {
+    renderNWPModelStudio();
+  }
+}
+window.refreshModelStudio = refreshModelStudio;
+
+// Keyboard shortcuts: Esc to exit theater mode
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") {
+    const card = document.getElementById("model-studio-card");
+    if (card && card.classList.contains("model-fullscreen")) {
+      toggleModelFullscreen();
+    }
+  }
+});
 
 function renderNWPModelStudio() {
-  const currentModel = state.modelStudio.model;
-  const currentParam = state.modelStudio.param;
-  const modelInfo = NWP_MODELS[currentModel] || NWP_MODELS['HRRR'];
-  const paramInfo = MODEL_STUDIO_PARAMS.find(p => p.id === currentParam) || MODEL_STUDIO_PARAMS[0];
+  const currentModelKey = state.modelStudio.model || 'RRFS';
+  const currentParamId = state.modelStudio.param || 'refc';
+  const modelInfo = NWP_MODELS[currentModelKey] || NWP_MODELS['RRFS'];
+  const theme = state.theme === 'light' ? 'light' : 'dark';
 
-  // 1. Render Model Selector Pills
+  // 1. Render Model Selector Pills (RRFS, HRRR, GFS, NBM, REFS, WN3, ECMWF, RTMA)
   const pillsContainer = document.getElementById("model-pills-container");
   if (pillsContainer) {
     pillsContainer.innerHTML = Object.keys(NWP_MODELS).map(key => {
       const m = NWP_MODELS[key];
-      const isActive = key === currentModel;
+      const isActive = key === currentModelKey;
       return `
         <button class="model-pill ${isActive ? 'active' : ''}" onclick="selectNWPModel('${key}')">
           <span>${key}</span>
@@ -1162,11 +1244,11 @@ function renderNWPModelStudio() {
     }).join("");
   }
 
-  // 2. Render Parameter Pills
+  // 2. Render Parameter Pills (Simulated Radar, 2m Temp, 10m Wind, Surface CAPE, Total Precip, Precip Type, Meteogram, Sounding)
   const paramContainer = document.getElementById("model-param-bar");
   if (paramContainer) {
     paramContainer.innerHTML = MODEL_STUDIO_PARAMS.map(p => {
-      const isActive = p.id === currentParam;
+      const isActive = p.id === currentParamId;
       return `
         <button class="model-param-btn ${isActive ? 'active' : ''}" onclick="selectNWPParam('${p.id}')">
           <i class="bi ${p.icon}"></i>
@@ -1176,50 +1258,209 @@ function renderNWPModelStudio() {
     }).join("");
   }
 
-  // 3. Render In-House Viewport Content
+  // 3. Render In-House Viewport Screen
   const viewport = document.getElementById("model-viewport-screen");
-  const timeLabel = document.getElementById("model-valid-timestamp");
-  if (timeLabel) {
-    timeLabel.innerText = `F+${String(state.modelStudio.leadHour).padStart(2, '0')}H · 18Z RUN · VALID OVERVIEW`;
-  }
+  const extLink = document.getElementById("model-external-link");
+  const statusHeadline = document.getElementById("model-status-headline");
 
-  if (viewport) {
-    if (paramInfo.type === 'meteogram') {
-      renderInHouseMeteogram(viewport);
-    } else if (paramInfo.type === 'sounding') {
-      renderInHouseSounding(viewport);
-    } else {
-      // Direct live high-res forecast chart
-      let chartUrl = 'https://www.wpc.ncep.noaa.gov/medr/5dayfcst500_wbg.gif';
-      if (currentParam === 'sfc') {
-        chartUrl = 'https://www.wpc.ncep.noaa.gov/medr/5dayfcst_wbg_conus.gif';
-      } else if (currentParam === 'qpf') {
-        chartUrl = 'https://www.wpc.ncep.noaa.gov/qpf/fill_94qwbg.gif';
-      } else if (currentParam === 'spc') {
-        chartUrl = 'https://www.spc.noaa.gov/products/outlook/day1otlk.gif';
-      }
+  if (!viewport) return;
 
-      viewport.innerHTML = `
-        <div class="text-center p-3 w-100">
-          <div class="d-flex justify-content-between align-items-center mb-2 px-2 flex-wrap gap-2">
-            <span class="mono" style="font-size: 11px; font-weight: 800; color: var(--maroon-light);">
-              ${currentModel} · ${paramInfo.name.toUpperCase()} (CONUS & TEXAS DOMAIN)
-            </span>
-            <span class="badge rounded-pill px-2 py-1 mono" style="background: var(--card-bg); border: 1px solid var(--line); color: var(--text-main); font-size: 10px;">
-              RESOLUTION: ${modelInfo.res} · CYCLE: ${modelInfo.cycle}
-            </span>
-          </div>
-          <img src="${chartUrl}" alt="${paramInfo.name}" class="img-fluid rounded" style="max-height: 520px; width: auto; object-fit: contain;">
-          <div class="mt-2 mono text-muted" style="font-size: 11px;">
-            ${modelInfo.summary}
-          </div>
-        </div>
+  if (currentParamId === 'meteogram') {
+    if (extLink) extLink.style.display = 'none';
+    if (statusHeadline) {
+      statusHeadline.innerHTML = `
+        <span class="pulse-indicator" style="background: #3b82f6; box-shadow: 0 0 8px rgba(59, 130, 246, 0.7);"></span>
+        <span class="mono" style="font-weight: 800; color: var(--maroon-light);">${currentModelKey} CONSENSUS</span>
+        <span class="mono text-muted d-none d-sm-inline">· 7-DAY POINT METEOGRAM SPREAD (${state.currentCity.toUpperCase()})</span>
       `;
+    }
+    renderInHouseMeteogram(viewport);
+  } else if (currentParamId === 'sounding') {
+    if (extLink) extLink.style.display = 'none';
+    if (statusHeadline) {
+      statusHeadline.innerHTML = `
+        <span class="pulse-indicator" style="background: #ef4444; box-shadow: 0 0 8px rgba(239, 68, 68, 0.7);"></span>
+        <span class="mono" style="font-weight: 800; color: var(--maroon-light);">${currentModelKey} THERMODYNAMICS</span>
+        <span class="mono text-muted d-none d-sm-inline">· ATMOSPHERIC SOUNDING & SEVERE CONVECTIVE INDICES</span>
+      `;
+    }
+    renderInHouseSounding(viewport);
+  } else if (currentModelKey === 'ECMWF') {
+    renderECMWFStudio(viewport, extLink, statusHeadline);
+  } else {
+    // Generate Forecast Eagle URL for the requested model and atmospheric field
+    let targetUrl = 'https://forecasteagle.com/rrfs/conus/refc';
+
+    if (modelInfo.fePath) {
+      if (modelInfo.fePath === 'weathernext3' || modelInfo.fePath === 'refs' || modelInfo.fePath === 'rainfall') {
+        targetUrl = `https://forecasteagle.com/${modelInfo.fePath}`;
+      } else if (modelInfo.fePath === 'gfs' || modelInfo.fePath === 'nbm') {
+        if (currentParamId && currentParamId !== 'refc') {
+          targetUrl = `https://forecasteagle.com/${modelInfo.fePath}/conus/${currentParamId}`;
+        } else {
+          targetUrl = `https://forecasteagle.com/${modelInfo.fePath}`;
+        }
+      } else {
+        const field = currentParamId || modelInfo.defaultField || 'refc';
+        const domain = modelInfo.domain || 'conus';
+        targetUrl = `https://forecasteagle.com/${modelInfo.fePath}/${domain}/${field}`;
+      }
+    }
+
+    targetUrl += (targetUrl.includes('?') ? '&' : '?') + `theme=${theme}`;
+
+    if (extLink) {
+      extLink.style.display = 'inline-flex';
+      extLink.href = targetUrl;
+    }
+
+    if (statusHeadline) {
+      const pName = MODEL_STUDIO_PARAMS.find(p => p.id === currentParamId)?.name || 'Composite Reflectivity';
+      statusHeadline.innerHTML = `
+        <span class="pulse-indicator"></span>
+        <span class="mono" style="font-weight: 800; color: var(--maroon-light);">${currentModelKey} CONUS</span>
+        <span class="mono text-muted d-none d-sm-inline">· ${pName.toUpperCase()} · ${modelInfo.res.toUpperCase()}</span>
+      `;
+    }
+
+    // Embed Forecast Eagle MapLibre GL engine in iframe
+    let iframe = document.getElementById("model-explorer-frame");
+    if (!iframe) {
+      viewport.innerHTML = `
+        <iframe 
+          id="model-explorer-frame" 
+          class="model-iframe" 
+          src="${targetUrl}" 
+          title="NWP Model Explorer"
+          loading="lazy"
+          allow="geolocation; fullscreen"
+          allowfullscreen>
+        </iframe>
+      `;
+    } else {
+      if (iframe.src !== targetUrl) {
+        iframe.src = targetUrl;
+      }
     }
   }
 
-  // 4. Render Model Consensus Comparison Table
+  // 4. Update Model Intelligence & Forecaster Dossier Strip
+  updateModelDossier(modelInfo, currentParamId);
+
+  // 5. Update Multi-Model Consensus Table
   renderModelConsensusTable();
+}
+
+function renderECMWFStudio(container, extLink, statusHeadline) {
+  if (extLink) {
+    extLink.style.display = 'inline-flex';
+    extLink.href = 'https://charts.ecmwf.int/';
+  }
+  if (statusHeadline) {
+    statusHeadline.innerHTML = `
+      <span class="pulse-indicator" style="background: #3b82f6; box-shadow: 0 0 8px rgba(59, 130, 246, 0.7);"></span>
+      <span class="mono" style="font-weight: 800; color: var(--maroon-light);">ECMWF IFS 9KM</span>
+      <span class="mono text-muted d-none d-sm-inline">· EUROPEAN CENTRE 4D-VAR GLOBAL SYNOPTIC GUIDANCE</span>
+    `;
+  }
+
+  container.innerHTML = `
+    <div class="p-4 w-100 text-center" style="max-width: 860px; margin: 0 auto;">
+      <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2 text-start">
+        <div>
+          <h5 class="mb-1 font-weight-bold" style="color: var(--text-main);">
+            <i class="bi bi-globe-americas text-primary me-2"></i>ECMWF Integrated Forecasting System (IFS 9km)
+          </h5>
+          <div class="mono text-muted" style="font-size: 11.5px;">
+            GLOBAL HIGH-RESOLUTION SYNOPTIC CYCLE · 4D-VAR DATA ASSIMILATION BENCHMARK
+          </div>
+        </div>
+        <span class="badge rounded-pill px-3 py-1 mono" style="background: var(--card-bg); border: 1px solid var(--line); color: var(--text-main); font-size: 11px;">
+          CYCLE: 00Z / 12Z OPERATIONAL
+        </span>
+      </div>
+
+      <div class="p-4 rounded mb-3 text-start" style="background: var(--card-bg); border: 1px solid var(--line);">
+        <p style="font-size: 13.5px; line-height: 1.6; color: var(--text-secondary); margin-bottom: 14px;">
+          The <strong>European Centre for Medium-Range Weather Forecasts (ECMWF)</strong> High-Resolution model is the premier global benchmark in numerical weather prediction. It uses advanced 4D-Var data assimilation, continuously blending hundreds of millions of real-time satellite, aircraft, buoy, and radiosonde observations into each global cycle.
+        </p>
+        <div class="row g-3">
+          <div class="col-md-4">
+            <div class="p-3 rounded h-100" style="background: var(--card-bg-sub); border: 1px solid var(--line); font-size: 12px;">
+              <strong class="d-block mono text-info mb-1"><i class="bi bi-cpu-fill me-1"></i> 4D-VAR DATA CORE</strong>
+              Continuously adjusts model initial state over a 12-hour atmospheric time window.
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="p-3 rounded h-100" style="background: var(--card-bg-sub); border: 1px solid var(--line); font-size: 12px;">
+              <strong class="d-block mono text-success mb-1"><i class="bi bi-award-fill me-1"></i> SYNOPTIC SKILL</strong>
+              Consistently yields the highest 500 hPa geopotential height anomaly correlation scores globally.
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="p-3 rounded h-100" style="background: var(--card-bg-sub); border: 1px solid var(--line); font-size: 12px;">
+              <strong class="d-block mono text-warning mb-1"><i class="bi bi-robot me-1"></i> AIFS AI INTEGRATION</strong>
+              ECMWF's Graph Neural Network AI model now running in operational parallel.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="d-flex justify-content-center gap-2 flex-wrap">
+        <button class="btn-studio-action py-2 px-3" onclick="selectNWPParam('meteogram')">
+          <i class="bi bi-graph-up text-primary"></i> Local Point Meteogram Spread
+        </button>
+        <button class="btn-studio-action py-2 px-3" onclick="selectNWPParam('sounding')">
+          <i class="bi bi-activity text-warning"></i> Convective Sounding Profile
+        </button>
+        <a href="https://charts.ecmwf.int/" target="_blank" class="btn-studio-action py-2 px-3">
+          <i class="bi bi-box-arrow-up-right text-info"></i> Official ECMWF OpenCharts
+        </a>
+        <a href="https://hdwx.tamu.edu/product-list/" target="_blank" class="btn-studio-action py-2 px-3">
+          <i class="bi bi-building text-danger"></i> Texas A&M Meteorology HDWX
+        </a>
+      </div>
+    </div>
+  `;
+}
+
+function updateModelDossier(modelInfo, currentParamId) {
+  const dossierContainer = document.getElementById("model-dossier-bar");
+  if (!dossierContainer) return;
+
+  const paramName = MODEL_STUDIO_PARAMS.find(p => p.id === currentParamId)?.name || 'Simulated Radar Reflectivity';
+
+  dossierContainer.innerHTML = `
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2 pb-2 border-bottom border-secondary border-opacity-25">
+      <div class="d-flex align-items-center gap-2">
+        <span class="mono" style="font-weight: 800; font-size: 12px; color: var(--text-main);">
+          ${modelInfo.name}
+        </span>
+        <span class="badge rounded-pill px-2 py-0 mono" style="background: var(--card-bg); border: 1px solid var(--line); color: var(--text-muted); font-size: 10px;">
+          ${modelInfo.type}
+        </span>
+      </div>
+      <div class="d-flex align-items-center gap-3 mono text-muted" style="font-size: 11px;">
+        <span><strong>GRID:</strong> ${modelInfo.res}</span>
+        <span><strong>UPDATE:</strong> ${modelInfo.cycle}</span>
+        <span class="d-none d-md-inline"><strong>INGEST:</strong> NOAA NOMADS & AWS Open Data</span>
+      </div>
+    </div>
+
+    <div class="row g-2 align-items-center">
+      <div class="col-lg-8">
+        <div style="font-size: 12px; color: var(--text-secondary); line-height: 1.5;">
+          <strong>FORECASTER GUIDANCE:</strong> ${modelInfo.summary}
+        </div>
+      </div>
+      <div class="col-lg-4">
+        <div class="model-tip-banner justify-content-lg-end">
+          <i class="bi bi-info-circle text-info"></i>
+          <span><strong>Canvas Controls:</strong> Space = Play/Pause · ← → = Step · Pan & Zoom · Click to probe</span>
+        </div>
+      </div>
+    </div>
+  `;
 }
 
 function renderInHouseMeteogram(container) {

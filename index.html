@@ -18,7 +18,7 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     
     <!-- Custom Texas A&M Maroon Design System & Light/Dark Theme -->
-    <link rel="stylesheet" href="css/style.css?v=7.0">
+    <link rel="stylesheet" href="css/style.css?v=8.0">
 </head>
 <body>
 
@@ -339,17 +339,38 @@
             </div>
         </section>
 
-        <!-- SECTION: NWP MODEL GUIDANCE STUDIO & ENSO TRACKING (WEATHERFRONT STYLE) -->
+        <!-- SECTION: NWP MODEL GUIDANCE STUDIO & ENSO TRACKING (FORECAST EAGLE WORKSTATION) -->
         <section id="models">
             <div class="rule">
                 <h2><i class="bi bi-cpu-fill text-info"></i> In-House NWP Model Guidance Studio & ENSO Tracking</h2>
                 <span class="ln"></span>
-                <span class="sub">INTERACTIVE FORECAST STUDIO · 7 NUMERICAL, CONVECTIVE & AI ENGINES</span>
+                <span class="sub">INTERACTIVE FORECAST WORKSTATION · NOAA NCEP RRFS, HRRR, GFS, NBM, REFS & AI ENGINES</span>
             </div>
 
-            <!-- In-House WeatherFront-Style Model Studio -->
-            <div class="model-studio-card">
-                <!-- Top Model Selector Tabs (GFS, AIGFS, HRRR, RRFS, ECMWF, AIFS, NBM) -->
+            <!-- In-House Forecast Eagle Model Studio -->
+            <div class="model-studio-card" id="model-studio-card">
+                <!-- Studio Control Toolbar -->
+                <div class="model-toolbar-bar">
+                    <div class="d-flex align-items-center gap-2" id="model-status-headline">
+                        <span class="pulse-indicator"></span>
+                        <span class="mono" style="font-weight: 800; color: var(--maroon-light);">RRFS CONUS</span>
+                        <span class="mono text-muted d-none d-sm-inline">· COMPOSITE REFLECTIVITY · 3 KM</span>
+                    </div>
+
+                    <div class="d-flex align-items-center gap-2">
+                        <button class="btn-studio-action" id="model-fullscreen-btn" onclick="toggleModelFullscreen()" title="Toggle full-screen theater workstation">
+                            <i class="bi bi-arrows-fullscreen"></i> <span class="d-none d-sm-inline">Theater Mode</span>
+                        </button>
+                        <button class="btn-studio-action" onclick="refreshModelStudio()" title="Reload live data stream">
+                            <i class="bi bi-arrow-clockwise"></i> <span class="d-none d-sm-inline">Reload</span>
+                        </button>
+                        <a class="btn-studio-action" id="model-external-link" href="https://forecasteagle.com/rrfs/conus/refc" target="_blank" title="Open Forecast Eagle explorer in standalone tab">
+                            <i class="bi bi-box-arrow-up-right"></i> <span class="d-none d-sm-inline">Standalone</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Top Model Selector Tabs (RRFS, HRRR, GFS, NBM, REFS, WN3, ECMWF, RTMA) -->
                 <div class="model-selector-bar" id="model-pills-container">
                     <!-- Populated dynamically by app.js -->
                 </div>
@@ -361,27 +382,20 @@
 
                 <!-- In-House Interactive Model Viewport Screen -->
                 <div class="model-viewport-screen" id="model-viewport-screen">
-                    <div class="text-muted p-4 mono">Loading In-House Model Guidance Engine...</div>
+                    <iframe 
+                        id="model-explorer-frame" 
+                        class="model-iframe" 
+                        src="https://forecasteagle.com/rrfs/conus/refc" 
+                        title="NWP Model Explorer"
+                        loading="lazy"
+                        allow="geolocation; fullscreen"
+                        allowfullscreen>
+                    </iframe>
                 </div>
 
-                <!-- Model Timeline & Scrubber Controller -->
-                <div class="model-timeline-bar" id="model-timeline-bar">
-                    <div class="d-flex align-items-center gap-2">
-                        <button class="model-step-btn" onclick="stepNWPLeadHour(-6)" title="Previous 6 Hours">
-                            <i class="bi bi-skip-backward-fill"></i>
-                        </button>
-                        <button class="model-step-btn play-btn" onclick="stepNWPLeadHour(6)" title="Advance 6 Hours">
-                            <i class="bi bi-skip-forward-fill"></i>
-                        </button>
-                        <span class="badge rounded-pill px-2 py-1 mono" id="model-valid-timestamp" style="background: var(--card-bg); border: 1px solid var(--line); color: var(--text-main); font-size: 11px;">
-                            F+24H · 18Z RUN · VALID OVERVIEW
-                        </span>
-                    </div>
-
-                    <div class="d-flex align-items-center gap-2 mono" style="font-size: 11px; color: var(--text-muted);">
-                        <span><i class="bi bi-broadcast text-success me-1"></i> DIRECT IN-HOUSE ENGINE</span>
-                        <span class="d-none d-sm-inline">· ZERO EXTERNAL REDIRECT</span>
-                    </div>
+                <!-- Model Information & Guidance Strip -->
+                <div class="model-info-strip" id="model-dossier-bar">
+                    <!-- Populated dynamically by app.js -->
                 </div>
             </div>
 
@@ -548,6 +562,6 @@
     <!-- Bootstrap 5 JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <!-- Core Application Engine -->
-    <script src="js/app.js?v=7.0"></script>
+    <script src="js/app.js?v=8.0"></script>
 </body>
 </html>
